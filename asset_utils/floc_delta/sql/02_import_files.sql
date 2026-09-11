@@ -3,15 +3,15 @@
 -- Preliminary: 
 -- The variable `ztable_flocdes` is set in DuckDb (i.e. not an env var)
 
--- CREATE OR REPLACE TABLE floc_delta_config.ztable_flocdes AS
--- SELECT 
---     t."Object Type" AS object_type,
---     t."Standard FLoc Description" AS standard_floc_description,
--- FROM read_xlsx(
---     getvariable('ztable_flocdes'),
---     all_varchar=true, 
---     sheet='Data'
--- ) AS t;
+CREATE OR REPLACE TABLE floc_delta_config.ztable_flocdes AS
+SELECT 
+    t."Object Type" AS object_type,
+    t."Standard FLoc Description" AS standard_floc_description,
+FROM read_xlsx(
+    getvariable('ztable_flocdes'),
+    all_varchar=true, 
+    sheet='Data'
+) AS t;
 
 
 
