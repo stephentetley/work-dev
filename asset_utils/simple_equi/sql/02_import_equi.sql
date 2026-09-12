@@ -20,6 +20,7 @@ insert into simple_equi.worklist by name
 select 
     t."Temp ID" as temp_id,
     t."Equi Name" as equi_name,
+    t."Category" as equi_category,
     t."Functional Location" as functional_location,
     t."Super Equi Id" as super_equi_id,
     t."Equi Type" as equi_type,

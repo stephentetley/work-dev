@@ -18,7 +18,7 @@ param (
 $assetUtilsPath = Join-Path -Path $PSScriptRoot -ChildPath ".."
 $assetUtilsPath = [System.IO.Path]::GetFullPath($assetUtilsPath)
 
-duckdb temp1_duckdb -c "set variable simple_equi_worklist = `"$Worklist`";" `
+duckdb -c "set variable simple_equi_worklist = `"$Worklist`";" `
     -c "attach '$OutFile' as sqlite_db (type sqlite);" `
     -c ".read $assetUtilsPath/excel_uploader/sql/create_sqlite_tables.sql" `
     -c ".read $assetUtilsPath/simple_equi/sql/01_create_simple_equi_tables.sql" `

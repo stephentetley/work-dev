@@ -25,7 +25,25 @@ insert into sqlite_db.equi_create_equipment_data by name
 select
     1 as batch_number,
     t.temp_id as equipment,
+    t.equi_category as equip_category,
+    t.equi_name as description_medium,
+    t.equi_type as object_type,
+    if(t.weight_kg is not null, format('{:.2f}', t.weight_kg), null) as gross_weight,
+    if(t.weight_kg is not null, 'KG', null)as unit_of_weight,
+    t.startup_date as start_up_date,
+    t.manufacturer as manufacturer,
+    t.model_number as model_number,
+    t.manuf_part_number as manuf_part_no,
+    t.manuf_serial_number as manuf_serial_number,
+    format('{:4d}', date_part('year', strptime(t.startup_date, '%d.%m.%Y'))) as construct_year,
+    format('{:02d}', date_part('month', strptime(t.startup_date, '%d.%m.%Y'))) as construct_mth,
+    t.functional_location as functional_loc,
+    t.super_equi_id as superord_equip,
+    format('{:04d}',t.position) as position,
+    t.tech_ident_number as tech_ident_no,
+    'ZEQUIPST' as status_profile,
     t.user_status as status_of_an_object,
+    t.user_status as status_without_stsno,
 from simple_equi.worklist t;
 
     

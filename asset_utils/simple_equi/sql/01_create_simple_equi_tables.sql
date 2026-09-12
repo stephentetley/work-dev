@@ -24,6 +24,7 @@ CREATE SCHEMA IF NOT EXISTS simple_equi;
 create or replace table simple_equi.worklist (
     temp_id varchar not null,
     equi_name varchar not null,
+    equi_category varchar,
     functional_location varchar,
     super_equi_id varchar,
     equi_type varchar,
@@ -35,7 +36,7 @@ create or replace table simple_equi.worklist (
     manuf_part_number varchar,
     manuf_serial_number varchar,
     position integer,
-    tech_ident_number    varchar,
+    tech_ident_number varchar,
     user_status varchar,
     ai2_pli_number varchar,
     ai2_sai_number varchar,
