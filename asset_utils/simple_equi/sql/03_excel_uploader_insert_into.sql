@@ -59,50 +59,95 @@ select
 from simple_equi.worklist t
 where t.solution_id is not null;
 
--- -- EASTING
--- insert into sqlite_db.floc_create_classification by name
--- select
---     1 as batch_number,
---     t.funcloc as functional_location,
---     'EAST_NORTH' as class,
---     'EASTING' as characteristics,
---     printf('%d', t.easting) as char_value,
--- from floc_delta.vw_new_flocs t
--- where t.easting is not null;
+-- LOCATION_ON_SITE
+insert into sqlite_db.equi_create_classification by name
+select
+    1 as batch_number,
+    t.temp_id as equipment,
+    t.equi_class as class,
+    'LOCATION_ON_SITE' as characteristics,
+    t.location_on_site as char_value,
+from simple_equi.worklist t;
+
+-- EASTING
+insert into sqlite_db.equi_create_classification by name
+select
+    1 as batch_number,
+    t.temp_id as equipment,
+    'EAST_NORTH' as class,
+    'EASTING' as characteristics,
+    if(t.easting is not null, 
+        format('{:d}', t.easting), 
+        format('{:d}', get_east_north_struct(t.grid_ref).easting)) as char_value
+from simple_equi.worklist t
+where t.easting is not null or t.grid_ref is not null;
 
 
--- -- NORTHING
--- insert into sqlite_db.floc_create_classification by name
--- select
---     1 as batch_number,
---     t.funcloc as functional_location,
---     'EAST_NORTH' as class,
---     'NORTHING' as characteristics,
---     printf('%d', t.northing) as char_value,
--- from floc_delta.vw_new_flocs t
--- where t.northing is not null;
-
--- -- Level 5 systems with SYSTEM_TYPE
--- insert into sqlite_db.floc_create_classification by name
--- select
---     1 as batch_number,
---     t.funcloc as functional_location,
---     t.floc_class as class,
---     'SYSTEM_TYPE' as characteristics,
---     t.level5_system_name as char_value,
--- from floc_delta.vw_new_flocs t
--- where t.level5_system_name is not null;
+-- EASTING
+insert into sqlite_db.equi_create_classification by name
+select
+    1 as batch_number,
+    t.temp_id as equipment,
+    'EAST_NORTH' as class,
+    'NORTHING' as characteristics,
+    if(t.northing is not null, 
+        format('{:d}', t.easting), 
+        format('{:d}', get_east_north_struct(t.grid_ref).northing)) as char_value
+from simple_equi.worklist t
+where t.northing is not null or t.grid_ref is not null;
 
 
--- -- AI2_AIB_REFERENCE
--- insert into sqlite_db.floc_create_classification by name
--- select
---     1 as batch_number,
---     t.funcloc as functional_location,
---     'AIB_REFERENCE' as class,
---     'AI2_AIB_REFERENCE' as characteristics,
---     t.aib_reference as char_value,
--- from floc_delta.vw_new_flocs t;
+-- AI2_AIB_REFERENCE (pli)
+insert into sqlite_db.equi_create_classification by name
+select
+    1 as batch_number,
+    t.temp_id as equipment,
+    'AIB_REFERENCE' as class,
+    'AI2_AIB_REFERENCE' as characteristics,
+    t.ai2_pli_number as char_value,
+from simple_equi.worklist t
+where t.ai2_pli_number is not null;
 
+-- AI2_AIB_REFERENCE (sai)
+insert into sqlite_db.equi_create_classification by name
+select
+    1 as batch_number,
+    t.temp_id as equipment,
+    'AIB_REFERENCE' as class,
+    'AI2_AIB_REFERENCE' as characteristics,
+    t.ai2_sai_number as char_value,
+from simple_equi.worklist t
+where t.ai2_sai_number is not null;
 
+-- CONDITION_GRADE
+insert into sqlite_db.equi_create_classification by name
+select
+    1 as batch_number,
+    t.temp_id as equipment,
+    'ASSET_CONDITION' as class,
+    'CONDITION_GRADE' as characteristics,
+    t.condition_grade as char_value,
+from simple_equi.worklist t
+where t.condition_grade is not null;
 
+-- CONDITION_GRADE_REASON
+insert into sqlite_db.equi_create_classification by name
+select
+    1 as batch_number,
+    t.temp_id as equipment,
+    'ASSET_CONDITION' as class,
+    'CONDITION_GRADE_REASON' as characteristics,
+    t.condition_grade_reason as char_value,
+from simple_equi.worklist t
+where t.condition_grade_reason is not null;
+
+-- SURVEY_YEAR
+insert into sqlite_db.equi_create_classification by name
+select
+    1 as batch_number,
+    t.temp_id as equipment,
+    'ASSET_CONDITION' as class,
+    'SURVEY_YEAR' as characteristics,
+    format('{:4d}', t.survey_year) as char_value,
+from simple_equi.worklist t
+where t.survey_year is not null;

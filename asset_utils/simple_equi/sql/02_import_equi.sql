@@ -36,6 +36,7 @@ select
     t."User Status" as user_status,
     t."AI2 PLI Number" as ai2_pli_number,
     t."AI2 SAI Number" as ai2_sai_number,
+    t."Location on Site" as location_on_site,
     t."GridRef" as grid_ref,
     try_cast(t."Easting" as integer)as easting,
     try_cast(t."Northing" as integer) as northing,

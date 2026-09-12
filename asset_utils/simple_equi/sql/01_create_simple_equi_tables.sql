@@ -40,6 +40,7 @@ create or replace table simple_equi.worklist (
     user_status varchar,
     ai2_pli_number varchar,
     ai2_sai_number varchar,
+    location_on_site varchar,
     grid_ref varchar,
     easting integer,
     northing integer,
