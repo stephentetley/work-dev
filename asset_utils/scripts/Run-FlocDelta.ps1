@@ -1,10 +1,3 @@
-
-<#
-    Paths need sorting out - currently this should be run 
-    from the top of `work-dev`
-#>
-
-
 param (
     [Parameter(Mandatory=$true)][string]$Worklist,
     [Parameter(Mandatory=$true)][string]$OutFile
