@@ -33,6 +33,8 @@ select
     format('{:4d}', date_part('year', strptime(t.startup_date, '%d.%m.%Y'))) as construct_year,
     format('{:02d}', date_part('month', strptime(t.startup_date, '%d.%m.%Y'))) as construct_mth,
     t.maint_plant as maint_plant,
+    t.cost_center as cost_center,
+    t.main_work_center as main_work_ctr,
     plant_section as plant_section,
     format('{:04d}',t.position) as position,
     t.installation_allowed as installation_allowed,

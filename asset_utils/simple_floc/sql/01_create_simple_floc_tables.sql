@@ -32,6 +32,8 @@ create or replace table simple_floc.worklist (
     startup_date varchar,
     position integer,
     maint_plant integer,
+    cost_center integer,
+    main_work_center varchar,
     plant_section varchar,
     installation_allowed varchar,
     user_status varchar,
