@@ -10,7 +10,7 @@ with cte1_raw as (
     from read_xlsx(
         getvariable('floc_selectors'),
         all_varchar=true, 
-        sheet='Sheet1'
+        sheet='Selectors'
     ) as t
 ), cte2_typed as (
     select
