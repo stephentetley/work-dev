@@ -147,7 +147,7 @@ select
     t.batch_number as batch_number,
     t.temp_id as equipment,
     'ASSET_CONDITION' as class,
-    'SURVEY_YEAR' as characteristics,
+    'SURVEY_DATE' as characteristics,
     format('{:4d}', t.survey_year) as char_value,
 from simple_equi.worklist t
 where t.survey_year is not null;
