@@ -23,7 +23,7 @@
 
 insert into sqlite_db.equi_create_equipment_data by name
 select
-    1 as batch_number,
+    t.batch_number as batch_number,
     t.temp_id as equipment,
     t.equi_category as equip_category,
     t.equi_name as description_medium,
@@ -51,7 +51,7 @@ from simple_equi.worklist t;
 -- SOLUTION_ID
 insert into sqlite_db.equi_create_classification by name
 select
-    1 as batch_number,
+    t.batch_number as batch_number,
     t.temp_id as equipment,
     'SOLUTION_ID' as class,
     'SOLUTION_ID' as characteristics,
@@ -62,7 +62,7 @@ where t.solution_id is not null;
 -- LOCATION_ON_SITE
 insert into sqlite_db.equi_create_classification by name
 select
-    1 as batch_number,
+    t.batch_number as batch_number,
     t.temp_id as equipment,
     t.equi_class as class,
     'LOCATION_ON_SITE' as characteristics,
@@ -72,7 +72,7 @@ from simple_equi.worklist t;
 -- EASTING
 insert into sqlite_db.equi_create_classification by name
 select
-    1 as batch_number,
+    t.batch_number as batch_number,
     t.temp_id as equipment,
     'EAST_NORTH' as class,
     'EASTING' as characteristics,
@@ -83,15 +83,15 @@ from simple_equi.worklist t
 where t.easting is not null or t.grid_ref is not null;
 
 
--- EASTING
+-- NORTHING
 insert into sqlite_db.equi_create_classification by name
 select
-    1 as batch_number,
+    t.batch_number as batch_number,
     t.temp_id as equipment,
     'EAST_NORTH' as class,
     'NORTHING' as characteristics,
     if(t.northing is not null, 
-        format('{:d}', t.easting), 
+        format('{:d}', t.northing), 
         format('{:d}', get_east_north_struct(t.grid_ref).northing)) as char_value
 from simple_equi.worklist t
 where t.northing is not null or t.grid_ref is not null;
@@ -100,7 +100,7 @@ where t.northing is not null or t.grid_ref is not null;
 -- AI2_AIB_REFERENCE (pli)
 insert into sqlite_db.equi_create_classification by name
 select
-    1 as batch_number,
+    t.batch_number as batch_number,
     t.temp_id as equipment,
     'AIB_REFERENCE' as class,
     'AI2_AIB_REFERENCE' as characteristics,
@@ -111,7 +111,7 @@ where t.ai2_pli_number is not null;
 -- AI2_AIB_REFERENCE (sai)
 insert into sqlite_db.equi_create_classification by name
 select
-    1 as batch_number,
+    t.batch_number as batch_number,
     t.temp_id as equipment,
     'AIB_REFERENCE' as class,
     'AI2_AIB_REFERENCE' as characteristics,
@@ -122,7 +122,7 @@ where t.ai2_sai_number is not null;
 -- CONDITION_GRADE
 insert into sqlite_db.equi_create_classification by name
 select
-    1 as batch_number,
+    t.batch_number as batch_number,
     t.temp_id as equipment,
     'ASSET_CONDITION' as class,
     'CONDITION_GRADE' as characteristics,
@@ -133,7 +133,7 @@ where t.condition_grade is not null;
 -- CONDITION_GRADE_REASON
 insert into sqlite_db.equi_create_classification by name
 select
-    1 as batch_number,
+    t.batch_number as batch_number,
     t.temp_id as equipment,
     'ASSET_CONDITION' as class,
     'CONDITION_GRADE_REASON' as characteristics,
@@ -144,7 +144,7 @@ where t.condition_grade_reason is not null;
 -- SURVEY_YEAR
 insert into sqlite_db.equi_create_classification by name
 select
-    1 as batch_number,
+    t.batch_number as batch_number,
     t.temp_id as equipment,
     'ASSET_CONDITION' as class,
     'SURVEY_YEAR' as characteristics,

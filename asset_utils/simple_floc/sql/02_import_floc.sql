@@ -19,6 +19,7 @@ from read_xlsx(
 insert into simple_floc.worklist by name 
 select 
     t."Functional Location" as functional_location,
+    coalesce(try_cast(t."Batch Number" as integer), 1) as batch_number,
     t."Floc Name" as floc_name,
     t."Category" as floc_category,
     t."Str Indicator" as str_indicator,

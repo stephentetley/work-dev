@@ -23,6 +23,7 @@ CREATE SCHEMA IF NOT EXISTS simple_floc;
 
 create or replace table simple_floc.worklist (
     functional_location varchar not null,
+    batch_number integer,
     floc_name varchar not null,
     floc_category varchar,
     str_indicator varchar,

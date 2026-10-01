@@ -23,6 +23,7 @@ CREATE SCHEMA IF NOT EXISTS simple_equi;
 
 create or replace table simple_equi.worklist (
     temp_id varchar not null,
+    batch_number integer,
     equi_name varchar not null,
     equi_category varchar,
     functional_location varchar,

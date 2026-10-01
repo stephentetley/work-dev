@@ -19,6 +19,7 @@ from read_xlsx(
 insert into simple_equi.worklist by name 
 select 
     t."Temp ID" as temp_id,
+    coalesce(try_cast(t."Batch Number" as integer), 1) as batch_number,
     t."Equi Name" as equi_name,
     t."Category" as equi_category,
     t."Functional Location" as functional_location,
@@ -38,7 +39,7 @@ select
     t."AI2 SAI Number" as ai2_sai_number,
     t."Location On Site" as location_on_site,
     t."Grid Ref" as grid_ref,
-    try_cast(t."Easting" as integer)as easting,
+    try_cast(t."Easting" as integer) as easting,
     try_cast(t."Northing" as integer) as northing,
     t."Solution ID" as solution_id,
     t."Condition Grade" as condition_grade,

@@ -23,7 +23,7 @@
 
 insert into sqlite_db.floc_create_functional_location by name
 select
-    1 as batch_number,
+    t.batch_number as batch_number,
     t.functional_location as functional_location,
     t.floc_name as floc_description,
     t.floc_category as category,
@@ -48,7 +48,7 @@ from simple_floc.worklist t;
 -- SOLUTION_ID
 insert into sqlite_db.floc_create_classification by name
 select
-    1 as batch_number,
+    t.batch_number as batch_number,
     t.functional_location as functional_location,
     'SOLUTION_ID' as class,
     'SOLUTION_ID' as characteristics,
@@ -60,7 +60,7 @@ where t.solution_id is not null;
 -- EASTING
 insert into sqlite_db.floc_create_classification by name
 select
-    1 as batch_number,
+    t.batch_number as batch_number,
     t.functional_location as functional_location,
     'EAST_NORTH' as class,
     'EASTING' as characteristics,
@@ -74,12 +74,12 @@ where t.easting is not null or t.grid_ref is not null;
 -- NORTHING
 insert into sqlite_db.floc_create_classification by name
 select
-    1 as batch_number,
+    t.batch_number as batch_number,
     t.functional_location as functional_location,
     'EAST_NORTH' as class,
     'NORTHING' as characteristics,
     if(t.northing is not null, 
-        format('{:d}', t.easting), 
+        format('{:d}', t.northing), 
         format('{:d}', get_east_north_struct(t.grid_ref).northing)) as char_value
 from simple_floc.worklist t
 where t.northing is not null or t.grid_ref is not null;
@@ -88,7 +88,7 @@ where t.northing is not null or t.grid_ref is not null;
 -- AI2_AIB_REFERENCE (sai)
 insert into sqlite_db.floc_create_classification by name
 select
-    1 as batch_number,
+    t.batch_number as batch_number,
     t.functional_location as functional_location,
     'AIB_REFERENCE' as class,
     'AI2_AIB_REFERENCE' as characteristics,
@@ -99,7 +99,7 @@ where t.ai2_sai_number is not null;
 -- SYSTEM_TYPE
 insert into sqlite_db.floc_create_classification by name
 select
-    1 as batch_number,
+    t.batch_number as batch_number,
     t.functional_location as functional_location,
     t.level5_system_class as class,
     'SYSTEM_TYPE' as characteristics,
