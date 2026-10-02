@@ -86,6 +86,7 @@ where t.northing is not null or t.grid_ref is not null;
 
 
 -- AI2_AIB_REFERENCE (sai)
+-- Generate a blank if null
 insert into sqlite_db.floc_create_classification by name
 select
     t.batch_number as batch_number,
@@ -93,8 +94,7 @@ select
     'AIB_REFERENCE' as class,
     'AI2_AIB_REFERENCE' as characteristics,
     t.ai2_sai_number as char_value,
-from simple_floc.worklist t
-where t.ai2_sai_number is not null;
+from simple_floc.worklist t;
 
 -- SYSTEM_TYPE
 insert into sqlite_db.floc_create_classification by name
