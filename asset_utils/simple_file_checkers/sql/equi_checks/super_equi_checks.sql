@@ -11,7 +11,7 @@
 
 
 -- 'Super equi not defined'
-insert into checker_results
+insert into checker_results by name
 with cte1_find_superlines as (
     select 
         t.source_row,
@@ -40,7 +40,7 @@ from cte2_missing_parent t;
 
 
 -- 'Child before Super', assumes proper ordering
-insert into checker_results
+insert into checker_results by name
 with cte1_find_superlines as (
     select 
         t.source_row,
@@ -68,7 +68,7 @@ from cte2_child_before_parent t;
 
 
 -- 'Child equal Super'
-insert into checker_results
+insert into checker_results by name
 with cte1_find_superlines as (
     select 
         t.source_row,

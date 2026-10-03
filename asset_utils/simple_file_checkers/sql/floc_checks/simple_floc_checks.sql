@@ -10,7 +10,7 @@
 --
 
 -- 'Missing or Invalid Category'
-insert into checker_results
+insert into checker_results by name
 select 
     t.source_row,
     getvariable('floc_srcfile') as source_file,

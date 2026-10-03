@@ -14,7 +14,7 @@
 load excel;
 
 delete from simple_floc_worklist;
-insert into simple_floc_worklist
+insert into simple_floc_worklist by name
 with cte1_raw as (
     select
         row_number() over () as source_row,

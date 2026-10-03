@@ -10,7 +10,7 @@
 --
 
 -- 'Equi Name too long'
-insert into checker_results
+insert into checker_results by name
 select 
     t.source_row,
     getvariable('equi_srcfile') as source_file,

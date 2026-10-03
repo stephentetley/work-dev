@@ -13,7 +13,7 @@ load excel;
 --
 
 delete from simple_equi_worklist;
-insert into simple_equi_worklist
+insert into simple_equi_worklist by name
 with cte1_raw as (
     select
         row_number() over () as source_row,
