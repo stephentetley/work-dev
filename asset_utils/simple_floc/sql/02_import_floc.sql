@@ -36,7 +36,7 @@ select
     t."User Status" as user_status,
     t."AI2 SAI Number" as ai2_sai_number,
     t."Grid Ref" as grid_ref,
-    try_cast(t."Easting" as integer)as easting,
+    try_cast(t."Easting" as integer) as easting,
     try_cast(t."Northing" as integer) as northing,
     t."Solution ID" as solution_id,
 from simple_floc_landing.worklist t

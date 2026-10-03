@@ -1,51 +1,18 @@
-
--- set variable equi_srcfile = 'sax06_simple_equi.xlsx';
+--
+-- Copyright 2026 Stephen Tetley
+-- 
+-- Use of this source code is governed by the Apache 2.0 license
+-- that can be found in the LICENSE file.
+--
 
 load excel;
 
-create type checker_severity as enum ('error', 'warning');
 
+-- Preliminary: 
+-- The variable `equi_srcfile` is set in DuckDb (i.e. not an env var)
+--
 
-create or replace table equi_checks (
-    source_row integer,
-    severity checker_severity, 
-    check_name varchar,
-    message varchar,
-);
-
-create or replace table simple_equi_worklist (
-    source_row integer,
-    batch_number integer,
-    temp_id varchar not null,
-    equi_name varchar,
-    category varchar,
-    functional_location varchar,
-    super_equi_id varchar,
-    equi_type varchar,
-    equi_class varchar,
-    weight_kg decimal,
-    startup_date date,
-    manufacturer varchar,
-    model_number varchar,
-    manuf_part_number varchar,
-    manuf_serial_number varchar,
-    position integer,
-    tech_ident_number varchar,
-    user_status varchar,
-    ai2_pli_number varchar,
-    ai2_sai_number varchar,
-    location_on_site varchar,
-    grid_ref varchar,
-    easting integer,
-    northing integer,
-    solution_id varchar,
-    condition_grade varchar,
-    condition_grade_reason varchar,
-    survey_year integer,
-    primary key (source_row)
-);
-
-insert into simple_equi_worklist 
+insert into simple_equi_worklists
 with cte1_raw as (
     select
         row_number() over () as source_row,
@@ -54,6 +21,7 @@ with cte1_raw as (
 ), cte2_typed as (
     select 
         t.source_row,
+        getvariable('equi_srcfile') as source_file,
         try_cast(t."Batch Number" as integer) as batch_number,
         t."Temp ID" as temp_id,
         t."Equi Name" as equi_name,
@@ -85,14 +53,4 @@ with cte1_raw as (
 ) 
 select * from cte2_typed
 order by source_row;
-
--- example check...
-insert into equi_checks 
-select 
-    t.source_row,
-    'error'::checker_severity as check_severity, 
-    'Equi Name too long' as check_name,
-    format('Equi Name "{}" is too long at {} characters', t.equi_name, length(t.equi_name)) as message,
-from simple_equi_worklist t
-where length(t.equi_name) > 40;
 
