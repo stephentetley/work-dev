@@ -20,11 +20,21 @@ if ($null -ne $EquiWorklist) {
         -c ".read $assetUtilsPath/simple_file_checkers/sql/03_import_simple_equi.sql"
 }
 
-duckdb $OutFile `
-    -c ".read $assetUtilsPath/simple_file_checkers/sql/floc_checks/simple_floc_checks.sql" `
-    -c ".read $assetUtilsPath/simple_file_checkers/sql/equi_checks/simple_equi_checks.sql" `
-    -c ".read $assetUtilsPath/simple_file_checkers/sql/equi_checks/super_equi_checks.sql" `
-    -c "select * from checker_results" `
+if ($null -ne $FlocWorklist) {
+    duckdb $OutFile  -c "set variable floc_srcfile = `"$FlocWorklist`";" `
+        -c ".read $assetUtilsPath/simple_file_checkers/sql/floc_checks/simple_floc_checks.sql"
+        
+}    
+
+if ($null -ne $EquiWorklist) {
+    duckdb $OutFile -c "set variable equi_srcfile = `"$EquiWorklist`";" `
+        -c ".read $assetUtilsPath/simple_file_checkers/sql/equi_checks/simple_equi_checks.sql" `
+        -c ".read $assetUtilsPath/simple_file_checkers/sql/equi_checks/super_equi_checks.sql" `
+        -c ".read $assetUtilsPath/simple_file_checkers/sql/equi_checks/temp_id_checks.sql"
+
+}
+
+duckdb $OutFile -c "select * from checker_results" `
 
 
 Write-Output "Wrote: $OutFile"

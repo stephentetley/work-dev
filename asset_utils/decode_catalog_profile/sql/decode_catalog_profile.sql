@@ -16,49 +16,63 @@
 
 -- set variable srcfile = 'catalog_profile.txt';
 
+create or replace temporary macro empty_as_null(str varchar) as
+    case 
+        when str = '' then null
+        else str
+    end;
+
+create or replace temporary macro starts_with_time(str varchar) as
+    regexp_matches(str, '^\s+\d{1,2}:\d{2}:\d{2}');
+
+create or replace temporary macro starts_with_date(str varchar) as
+    regexp_matches(str, '^\p{L}{3} \p{L}{3} \d{1,2}');
+
+
+create or replace temporary macro get_cat_prof(str varchar) as
+    case starts_with_time(str)
+        when true then null
+        else coalesce(
+                regexp_extract(str, '^\s+(\S+)\s+', 1).empty_as_null(),
+                regexp_extract(str, '^\p{L}{3} \p{L}{3} \d{1,2}(\S+)$', 1).empty_as_null()
+            )
+    end;
+
+create or replace temporary macro get_description(str varchar) as
+    case starts_with_date(str)
+        when true then null
+        else coalesce(
+                regexp_extract(str, '^\s+\d{1,2}:\d{2}:\d{2} \d{4}(.+)\s+\d+/\d+$', 1).empty_as_null(),
+                regexp_extract(str, '^\s+\S+\s+(.+)', 1).empty_as_null()
+            )
+    end;
+
 create or replace table xtable_catalog_profile_classes as
 with cte1_raw as (
     select 
         row_number() over () as linenum,
         t.* as body,
     from read_csv(getvariable(srcfile), header=false) t
-), cte2_drop_page_headings as (
+), cte2_build_rows as (
     select 
-        t.* 
+        t.linenum,
+        get_cat_prof(t.body) as cat_prof,
+        get_description(t.body) as description,
     from cte1_raw t
     where not regexp_matches(t.body, 'Catalog profile text')
-), cte3_good_lines as (
+), cte3_with_prev as (
     select 
-        t.linenum, 
-        regexp_extract(t.body, '^\s+(\p{Lu}{6})\s+(.+)$', 1) as class_name,
-        regexp_extract(t.body, '^\s+(\p{Lu}{6})\s+(.+)$', 2) as description,
-    from cte2_drop_page_headings t
-    where regexp_matches(t.body, '^\s+(\p{Lu}{6})\s+(.+)$')
-), cte4_page_number_lines as (
+        t.linenum,
+        t.cat_prof,
+        t.description,
+        lag(t.cat_prof, 1) over (order by t.linenum) as prev_cat_prof
+    from cte2_build_rows t
+), cte4_fixup as (
     select 
-        t.linenum, 
-        'FROM_PREV' as class_name,
-        regexp_extract(t.body, '^\s+\d{1,2}:\d{2}:\d{2} \d{4}(.+)\s+\d+/\d+$', 1) as description,
-    from cte2_drop_page_headings t
-    where regexp_matches(t.body, '^\s+\d{1,2}:\d{2}:\d{2} \d{4}(.+)\s+\d+/\d+$') -- \s+\d:\d:\d \d{4}(.+)
-), cte5_starts_with_date_lines as (
-    select 
-        t.linenum, 
-        regexp_extract(t.body, '^\p{L}{3} \p{L}{3} \d{1,2}(\p{Lu}{6})$', 1) as class_name,
-        'FROM NEXT' as description,
-    from cte2_drop_page_headings t
-    where regexp_matches(t.body, '^\p{L}{3} \p{L}{3} \d{1,2}(\p{Lu}{6})$')
-), cte6_line_break_stitching as (
-    select
-        t.linenum, 
-        t.class_name, 
-        t1.description,
-    from cte5_starts_with_date_lines t
-    join cte4_page_number_lines t1 on t1.linenum = t.linenum + 1 
-), cte7_unions as (
-    select t.class_name, t.description from cte3_good_lines t
-    union by name 
-    select t.class_name, t.description from cte6_line_break_stitching t
+        t.linenum,
+        coalesce(t.cat_prof, t.prev_cat_prof) as cat_prof,
+        t.description,
+    from cte3_with_prev t
+    where t.description is not null
 )
-select * from cte7_unions
-order by class_name;
+select cat_prof, description from cte4_fixup;

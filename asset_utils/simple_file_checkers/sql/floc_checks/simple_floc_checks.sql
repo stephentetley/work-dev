@@ -9,6 +9,23 @@
 -- The variable `floc_srcfile` is set in DuckDb (i.e. not an env var)
 --
 
+-- 'Floc Name too long'
+insert into checker_results by name
+select 
+    t.source_row,
+    getvariable('floc_srcfile') as source_file,
+    'floc'::checker_source as source_type, 
+    'error'::checker_severity as severity, 
+    t.functional_location    as floc_or_temp_id,
+    'Floc Name too long' as check_name,
+    format('Floc Name "{}" is too long at {} characters', t.floc_name, length(t.floc_name)) as message,
+from simple_floc_worklist t
+where length(t.floc_name) > 40;
+
+-- malformed floc
+
+
+
 -- 'Missing or Invalid Category'
 insert into checker_results by name
 select 
