@@ -5,6 +5,9 @@
 -- that can be found in the LICENSE file.
 --
 
+-- Preliminary: 
+-- The variable `equi_srcfile` is set in DuckDb (i.e. not an env var)
+--
 
 
 -- 'Super equi not defined'
@@ -12,25 +15,22 @@ insert into checker_results
 with cte1_find_superlines as (
     select 
         t.source_row,
-        t.source_file,
         t.temp_id,
         t.super_equi_id
-    from simple_equi_worklists t
+    from simple_equi_worklist t
     where regexp_matches(t.super_equi_id, '^\$\d+$')
 ), cte2_missing_parent as (
     select 
         t.source_row,
-        t.source_file,
         t.temp_id,
         t.super_equi_id,
     from cte1_find_superlines t
-    where not exists (from simple_equi_worklists t1 
-                    where t1.temp_id = t.super_equi_id 
-                    and t1.source_file = t.source_file)
+    where not exists (from simple_equi_worklist t1 
+                    where t1.temp_id = t.super_equi_id)
 ) 
 select 
     t.source_row,
-    t.source_file,
+    getvariable('equi_srcfile') as source_file,
     'equi'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.temp_id as floc_or_temp_id,
@@ -44,15 +44,13 @@ insert into checker_results
 with cte1_find_superlines as (
     select 
         t.source_row,
-        t.source_file,
         t.temp_id,
         t.super_equi_id
-    from simple_equi_worklists t
+    from simple_equi_worklist t
     where regexp_matches(t.super_equi_id, '^\$\d+$')
 ), cte2_child_before_parent as (
     select 
         t.source_row,
-        t.source_file,
         t.temp_id,
         t.super_equi_id,
     from cte1_find_superlines t
@@ -60,7 +58,7 @@ with cte1_find_superlines as (
 ) 
 select 
     t.source_row,
-    t.source_file,
+    getvariable('equi_srcfile') as source_file,
     'equi'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.temp_id as floc_or_temp_id,
@@ -74,15 +72,14 @@ insert into checker_results
 with cte1_find_superlines as (
     select 
         t.source_row,
-        t.source_file,
         t.temp_id,
         t.super_equi_id
-    from simple_equi_worklists t
+    from simple_equi_worklist t
     where regexp_matches(t.super_equi_id, '^\$\d+$') and t.temp_id == t.super_equi_id
 ) 
 select 
     t.source_row,
-    t.source_file,
+    getvariable('equi_srcfile') as source_file,
     'equi'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.temp_id as floc_or_temp_id,

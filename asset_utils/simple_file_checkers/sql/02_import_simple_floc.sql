@@ -13,7 +13,8 @@
 
 load excel;
 
-insert into simple_floc_worklists
+delete from simple_floc_worklist;
+insert into simple_floc_worklist
 with cte1_raw as (
     select
         row_number() over () as source_row,
@@ -22,7 +23,6 @@ with cte1_raw as (
 ), cte2_typed as (
     select 
         t.source_row,
-        getvariable('floc_srcfile') as source_file,
         try_cast(t."Batch Number" as integer) as batch_number,
         t."Functional Location" as functional_location,
         t."Floc Name" as floc_name,

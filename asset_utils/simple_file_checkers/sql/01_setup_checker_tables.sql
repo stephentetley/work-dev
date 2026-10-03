@@ -20,9 +20,8 @@ create or replace table checker_results (
     message varchar,
 );
 
-create or replace table simple_floc_worklists (
+create or replace table simple_floc_worklist (
     source_row integer,
-    source_file varchar,
     batch_number integer,
     functional_location varchar not null,
     floc_name varchar not null,
@@ -48,9 +47,8 @@ create or replace table simple_floc_worklists (
 );
 
 
-create or replace table simple_equi_worklists (
+create or replace table simple_equi_worklist (
     source_row integer,
-    source_file varchar,
     batch_number integer,
     temp_id varchar not null,
     equi_name varchar,

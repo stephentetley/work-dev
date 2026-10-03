@@ -12,7 +12,8 @@ load excel;
 -- The variable `equi_srcfile` is set in DuckDb (i.e. not an env var)
 --
 
-insert into simple_equi_worklists
+delete from simple_equi_worklist;
+insert into simple_equi_worklist
 with cte1_raw as (
     select
         row_number() over () as source_row,
@@ -21,7 +22,6 @@ with cte1_raw as (
 ), cte2_typed as (
     select 
         t.source_row,
-        getvariable('equi_srcfile') as source_file,
         try_cast(t."Batch Number" as integer) as batch_number,
         t."Temp ID" as temp_id,
         t."Equi Name" as equi_name,
