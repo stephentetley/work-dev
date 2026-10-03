@@ -8,8 +8,9 @@ param (
     probably by an API GET.
 #>
 
-$assetUtilsPath = Join-Path -Path $PSScriptRoot -ChildPath ".."
+$assetUtilsPath = Join-Path -Path $PSScriptRoot -ChildPath "../asset_utils"
 $assetUtilsPath = [System.IO.Path]::GetFullPath($assetUtilsPath)
+
 
 $workPath = $Env:MY_WORK_DIR
 

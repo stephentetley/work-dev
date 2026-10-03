@@ -4,8 +4,9 @@ param (
 )
 
 
-$assetUtilsPath = Join-Path -Path $PSScriptRoot -ChildPath ".."
+$assetUtilsPath = Join-Path -Path $PSScriptRoot -ChildPath "../asset_utils"
 $assetUtilsPath = [System.IO.Path]::GetFullPath($assetUtilsPath)
+
 
 duckdb -c "set variable simple_floc_worklist = `"$Worklist`";" `
     -c "attach '$OutFile' as sqlite_db (type sqlite);" `

@@ -6,8 +6,9 @@ param (
 )
 
 
-$assetUtilsPath = Join-Path -Path $PSScriptRoot -ChildPath ".."
+$assetUtilsPath = Join-Path -Path $PSScriptRoot -ChildPath "../asset_utils"
 $assetUtilsPath = [System.IO.Path]::GetFullPath($assetUtilsPath)
+
 
 duckdb `
     -c "set variable floc_selectors = `"$Selectors`";" `

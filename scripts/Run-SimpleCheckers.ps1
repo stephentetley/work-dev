@@ -5,7 +5,7 @@ param (
 )
 
 
-$assetUtilsPath = Join-Path -Path $PSScriptRoot -ChildPath ".."
+$assetUtilsPath = Join-Path -Path $PSScriptRoot -ChildPath "../asset_utils"
 $assetUtilsPath = [System.IO.Path]::GetFullPath($assetUtilsPath)
 
 duckdb $OutFile -c ".read $assetUtilsPath/simple_file_checkers/sql/01_setup_checker_tables.sql"
@@ -21,6 +21,7 @@ if ($null -ne $EquiWorklist) {
 }
 
 duckdb $OutFile `
+    -c ".read $assetUtilsPath/simple_file_checkers/sql/floc_checks/simple_floc_checks.sql" `
     -c ".read $assetUtilsPath/simple_file_checkers/sql/equi_checks/simple_equi_checks.sql" `
     -c ".read $assetUtilsPath/simple_file_checkers/sql/equi_checks/super_equi_checks.sql" `
     -c "select * from checker_results" `

@@ -4,8 +4,9 @@ param (
 )
 
 
-$assetUtilsPath = Join-Path -Path $PSScriptRoot -ChildPath ".."
+$assetUtilsPath = Join-Path -Path $PSScriptRoot -ChildPath "../asset_utils"
 $assetUtilsPath = [System.IO.Path]::GetFullPath($assetUtilsPath)
+
 
 duckdb -c "set variable srcfile = `"$Worklist`";" `
     -c ".read $assetUtilsPath/decode_catalog_profile/sql/decode_catalog_profile.sql" `
