@@ -1,6 +1,7 @@
 
 param (
     [Parameter(Mandatory=$true)][string]$Worklist,
+    [Parameter(Mandatory=$true)][string]$CatProfCsv,
     [Parameter(Mandatory=$true)][string]$OutFile
 )
 
@@ -14,6 +15,7 @@ $assetUtilsPath = [System.IO.Path]::GetFullPath($assetUtilsPath)
 
 
 duckdb -c "set variable simple_equi_worklist = `"$Worklist`";" `
+    -c "set variable catalog_profile_csv = `"$CatProfCsv`";" `
     -c "attach '$OutFile' as sqlite_db (type sqlite);" `
     -c ".read $assetUtilsPath/excel_uploader/sql/create_sqlite_tables.sql" `
     -c ".read $assetUtilsPath/simple_equi/sql/01_create_simple_equi_tables.sql" `

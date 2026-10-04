@@ -3,9 +3,20 @@
 
 -- Preliminary: 
 -- The variable `simple_equi_worklist` is set in DuckDb (i.e. not an env var)
+-- The variable `catalog_profile_csv` is set in DuckDb (i.e. not an env var)
+
+delete from simple_equi.catalog_profile;
+insert into simple_equi.catalog_profile by name
+select 
+    t.cat_prof as cat_prof,
+    t.description as description,
+from read_csv(
+    getvariable('catalog_profile_csv'),
+    header=true,
+    all_varchar=true
+) as t;
 
 
--- Set the variable `simple_equi_worklist` before running this file
 
 create or replace table simple_equi_landing.worklist as
 select 

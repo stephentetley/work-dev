@@ -37,6 +37,7 @@ select
     t.manuf_serial_number as manuf_serial_number,
     format('{:4d}', date_part('year', strptime(t.startup_date, '%d.%m.%Y'))) as construct_year,
     format('{:02d}', date_part('month', strptime(t.startup_date, '%d.%m.%Y'))) as construct_mth,
+    t1.cat_prof as catalog_profile,
     t.functional_location as functional_loc,
     t.super_equi_id as superord_equip,
     format('{:04d}',t.position) as position,
@@ -44,7 +45,8 @@ select
     'ZEQUIPST' as status_profile,
     t.user_status as status_of_an_object,
     t.user_status as status_without_stsno,
-from simple_equi.worklist t;
+from simple_equi.worklist t
+left join simple_equi.catalog_profile t1 on t1.cat_prof = t.equi_class;
 
     
 
