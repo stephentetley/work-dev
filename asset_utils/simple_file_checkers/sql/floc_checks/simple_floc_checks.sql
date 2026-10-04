@@ -154,3 +154,78 @@ from cte2_add_objtypes t
 anti join asset_lake.ztables.flobjl t1 
     on (t1.structure_indicator == t.str_indicator and t1.object_type == t.parent_type and t1.object_type_1 == t.floc_type);
 
+-- 'Duplicate Functional Locations'
+insert into checker_results by name
+with cte1_floc_occurs as (
+    select 
+        t.functional_location,
+        list(t.source_row) as row_nums
+    from simple_floc_worklist t
+    group by all
+), cte2_floc_duplicates as (
+    select 
+        t.*,
+    from cte1_floc_occurs t
+    where list_count(t.row_nums) > 1
+)
+select 
+    list_min(t.row_nums) as source_row,
+    getvariable('floc_srcfile') as source_file,
+    'floc'::checker_source as source_type, 
+    'error'::checker_severity as severity, 
+    t.functional_location as floc_or_temp_id,
+    'Duplicate Functional Locations' as check_name,
+    format('Floc "{}" is duplicated, see rows {}', t.functional_location, t.row_nums) as message,
+from cte2_floc_duplicates t;
+
+
+-- 'Missing Mandatory Data'
+create or replace temporary macro floc_missing_mandatory(colname varchar, longname varchar) as table 
+from query(
+    format('select t.source_row, t.functional_location, ''{}'' as missing1, from simple_floc_worklist t where t.{} is null;', longname, colname)
+);
+
+
+-- 'Missing Mandatory Data'
+insert into checker_results by name
+with cte1_missing1 as (
+    select * from floc_missing_mandatory('batch_number', 'Batch Number')
+    union by name
+    select * from floc_missing_mandatory('functional_location', 'Functional Location')
+    union by name
+    select * from floc_missing_mandatory('floc_name', 'Floc Name')
+    union by name
+    select * from floc_missing_mandatory('floc_category', 'Category')
+    union by name
+    select * from floc_missing_mandatory('str_indicator', 'Str Indicator')
+    union by name
+    select * from floc_missing_mandatory('floc_type', 'Floc Type')
+    union by name
+    select * from floc_missing_mandatory('maint_plant', 'Maint Plant')
+    union by name
+    select * from floc_missing_mandatory('cost_center', 'Cost Center')
+    union by name
+    select * from floc_missing_mandatory('main_work_center', 'Main Work Center')
+    union by name
+    select * from floc_missing_mandatory('user_status', 'User Status')
+    union by name
+    select * from floc_missing_mandatory('startup_date', 'Startup Date')
+), cte2_grouped as (
+    select
+        t.source_row, 
+        t.functional_location,
+        string_agg(t.missing1, ', ' order by t.missing1 desc) as missing,
+    from cte1_missing1 t
+    group by all
+)
+select 
+    t.source_row,
+    getvariable('floc_srcfile') as source_file,
+    'floc'::checker_source as source_type, 
+    'error'::checker_severity as severity, 
+    t.functional_location as floc_or_temp_id,
+    'Missing Mandatory Data' as check_name,
+    format('Floc "{}" is missing the mandatory data {}', t.functional_location, t.missing) as message,
+from cte2_grouped t;
+
+
