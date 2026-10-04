@@ -102,6 +102,24 @@ select
 from simple_floc_worklist t
 where t.installation_allowed == false and t.floc_category > 5;
 
+-- 'Unrecognized Floc Type'
+insert into checker_results by name
+with cte1_levels_1_4 as (
+    select * from simple_floc_worklist where floc_category < 5
+)
+select 
+    t.source_row,
+    getvariable('floc_srcfile') as source_file,
+    'floc'::checker_source as source_type, 
+    'error'::checker_severity as severity, 
+    t.functional_location as floc_or_temp_id,
+    'Unrecognized Floc Type' as check_name,
+    format('Unrecognized Floc type "{}"', t.floc_type) as message,
+from cte1_levels_1_4 t
+anti join asset_lake.ztables.flobjl t1 
+    on (t1.structure_indicator == t.str_indicator and t1.object_type_1 == t.floc_type);
+
+
 -- 'Parent Child Type Error'
 -- Only checks when parent flocs in the worklist!
 insert into checker_results by name
@@ -130,8 +148,8 @@ select
     'floc'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.functional_location as floc_or_temp_id,
-    'Parent Child Type Error' as check_name,
-    format('Parent type "{}" cannot have "{}" as a child', t.parent_type, t.floc_type) as message,
+    'Parent-Child Type Error' as check_name,
+    format('Floc type "{}" cannot be a child of the parent type "{}"', t.floc_type, t.parent_type) as message,
 from cte2_add_objtypes t
 anti join asset_lake.ztables.flobjl t1 
     on (t1.structure_indicator == t.str_indicator and t1.object_type == t.parent_type and t1.object_type_1 == t.floc_type);
