@@ -75,7 +75,7 @@ where t.floc_category is null or t.floc_category < 1 or t.floc_category > 6;
 
 
 -- 'Incorrect Installation Allowed'
-insert into checker_results
+insert into checker_results by name
 select 
     t.source_row,
     getvariable('floc_srcfile') as source_file,
@@ -89,7 +89,7 @@ from simple_floc_worklist t
 where t.installation_allowed and t.floc_category < 5;
 
 -- 'Missing Installation Allowed'
-insert into checker_results
+insert into checker_results by name
 select 
     t.source_row,
     getvariable('floc_srcfile') as source_file,
@@ -101,4 +101,38 @@ select
             t.functional_location, t.floc_category) as message,
 from simple_floc_worklist t
 where t.installation_allowed == false and t.floc_category > 5;
+
+-- 'Parent Child Type Error'
+-- Only checks when parent flocs in the worklist!
+insert into checker_results by name
+with cte1_floc_and_parent as (
+    select 
+        t.functional_location,
+        max(t1.functional_location) as parent,
+    from simple_floc_worklist t
+    join simple_floc_worklist t1 on starts_with(t.functional_location, t1.functional_location) and t1.functional_location < t.functional_location
+    group by all
+), cte2_add_objtypes as (
+    select 
+        t1.source_row,
+        t.functional_location,
+        t1.str_indicator,
+        t1.floc_type,
+        t.parent,
+        t2.floc_type as parent_type
+    from cte1_floc_and_parent t
+    join simple_floc_worklist t1 on t1.functional_location = t.functional_location
+    join simple_floc_worklist t2 on t2.functional_location = t.parent
+)
+select 
+    t.source_row,
+    getvariable('floc_srcfile') as source_file,
+    'floc'::checker_source as source_type, 
+    'error'::checker_severity as severity, 
+    t.functional_location as floc_or_temp_id,
+    'Parent Child Type Error' as check_name,
+    format('Parent type "{}" cannot have "{}" as a child', t.parent_type, t.floc_type) as message,
+from cte2_add_objtypes t
+anti join asset_lake.ztables.flobjl t1 
+    on (t1.structure_indicator == t.str_indicator and t1.object_type == t.parent_type and t1.object_type_1 == t.floc_type);
 

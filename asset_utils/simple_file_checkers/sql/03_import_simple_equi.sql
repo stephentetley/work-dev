@@ -13,10 +13,11 @@ load excel;
 --
 
 delete from simple_equi_worklist;
+-- Offset source_row by 1 to match Excel
 insert into simple_equi_worklist by name
 with cte1_raw as (
     select
-        row_number() over () as source_row,
+        1 + row_number() over () as source_row,
         t.*,
     from read_xlsx(getvariable('equi_srcfile'), all_varchar = true, header = true) t
 ), cte2_typed as (
