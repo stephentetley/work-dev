@@ -24,6 +24,39 @@ where length(t.floc_name) > 40;
 
 -- malformed floc
 
+create or replace temporary macro check_site_of_floc(flocname varchar) as 
+    regexp_matches(flocname, '^\p{Lu}{5}') 
+        or regexp_matches(flocname, '^\p{Lu}{4}\d')
+        or regexp_matches(flocname, '^\p{Lu}{3}\d{2}');
+
+create or replace temporary macro check_floc_shape(flocname varchar, category integer) as 
+    case check_site_of_floc(flocname)
+        when true then
+            case category
+                when 1 then length(flocname) == 5
+                when 2 then regexp_matches(flocname, '^\S{5}-\p{Lu}{3}$')
+                when 3 then regexp_matches(flocname, '^\S{5}-\p{Lu}{3}-\p{Lu}{3}$')
+                when 4 then regexp_matches(flocname, '^\S{5}-\p{Lu}{3}-\p{Lu}{3}-\p{Lu}{3}$')
+                when 5 then regexp_matches(flocname, '^\S{5}-\p{Lu}{3}-\p{Lu}{3}-\p{Lu}{3}-SYS\d{2}$')
+                when 6 then regexp_matches(flocname, '^\S{5}-\p{Lu}{3}-\p{Lu}{3}-\p{Lu}{3}-SYS\d{2}-\p{Lu}{3}\d{2}$')
+                else false
+            end
+        else false
+    end;
+
+-- malformed floc
+insert into checker_results by name
+select 
+    t.source_row,
+    getvariable('floc_srcfile') as source_file,
+    'floc'::checker_source as source_type, 
+    'error'::checker_severity as severity, 
+    t.functional_location as floc_or_temp_id,
+    'Malformed Floc' as check_name,
+    format('Function location "{}" is malformed for level level {}', t.functional_location, t.floc_category) as message,
+from simple_floc_worklist t
+where check_floc_shape(t.functional_location, t.floc_category) > 40;
+
 
 
 -- 'Missing or Invalid Category'

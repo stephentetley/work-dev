@@ -42,7 +42,7 @@ create or replace temporary macro get_description(str varchar) as
     case starts_with_date(str)
         when true then null
         else coalesce(
-                regexp_extract(str, '^\s+\d{1,2}:\d{2}:\d{2} \d{4}(.+)\s+\d+/\d+$', 1).empty_as_null(),
+                regexp_extract(str, '^\s+\d{1,2}:\d{2}:\d{2} \d{4}(.+)\s+\d+/\d+$', 1).trim().empty_as_null(),
                 regexp_extract(str, '^\s+\S+\s+(.+)', 1).empty_as_null()
             )
     end;
