@@ -30,7 +30,7 @@ create or replace table simple_floc_worklist (
     floc_type varchar,
     level5_system_class varchar,
     level5_system_name varchar,
-    startup_date varchar,
+    startup_date date,
     position integer,
     maint_plant integer,
     cost_center integer,

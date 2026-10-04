@@ -83,3 +83,55 @@ select
 from cte1_add_parent_type t
 anti join asset_lake.ztables.eqobjl t1 
     on (t1.object_type_1 == t.equi_type and t1.object_type == t.parent_type);
+
+-- 'Missing Mandatory Data'
+create or replace temporary macro equi_missing_mandatory(colname varchar, longname varchar) as table 
+from query(
+    format('select t.source_row, t.temp_id, ''{}'' as missing1, from simple_equi_worklist t where t.{} is null;', longname, colname)
+);
+
+
+-- 'Missing Mandatory Data'
+insert into checker_results by name
+with cte1_missing1 as (
+    select * from equi_missing_mandatory('batch_number', 'Batch Number')
+    union by name
+    select * from equi_missing_mandatory('temp_id', 'Temp ID')
+    union by name
+    select * from equi_missing_mandatory('equi_name', 'Equi Name')
+    union by name
+    select * from equi_missing_mandatory('category', 'Category')
+    union by name
+    select * from equi_missing_mandatory('functional_location', 'Functional Location')
+    union by name
+    select * from equi_missing_mandatory('equi_type', 'Equi Type')
+    union by name
+    select * from equi_missing_mandatory('equi_class', 'Equi Class')
+    union by name
+    select * from equi_missing_mandatory('startup_date', 'Startup Date')
+    union by name
+    select * from equi_missing_mandatory('manufacturer', 'Manufacturer')
+    union by name
+    select * from equi_missing_mandatory('model_number', 'Model Number')
+    union by name
+    select * from equi_missing_mandatory('manuf_serial_number', 'Manuf Serial Number')
+    union by name
+    select * from equi_missing_mandatory('user_status', 'User Status')
+), cte2_grouped as (
+    select
+        t.source_row, 
+        t.temp_id,
+        string_agg(t.missing1, ', ' order by t.missing1 desc) as missing,
+    from cte1_missing1 t
+    group by all
+)
+select 
+    t.source_row,
+    getvariable('equi_srcfile') as source_file,
+    'equi'::checker_source as source_type, 
+    'error'::checker_severity as severity, 
+    t.temp_id as floc_or_temp_id,
+    'Missing Mandatory Data' as check_name,
+    format('Equi "{}" is missing the mandatory data {}', t.temp_id, t.missing) as message,
+from cte2_grouped t;
+

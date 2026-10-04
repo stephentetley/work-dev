@@ -34,7 +34,7 @@ with cte1_raw as (
         t."Floc Type" as floc_type,
         t."Level5 System Class" as level5_system_class,
         t."Level5 System Name" as level5_system_name,
-        t."Startup Date" as startup_date,
+        try(strptime(t."Startup Date", '%d.%m.%Y')::date) as startup_date,
         try_cast(t."Position" as integer) as position,
         try_cast(t."Maint Plant" as integer) as maint_plant,
         try_cast(t."Cost Center" as integer) as cost_center,

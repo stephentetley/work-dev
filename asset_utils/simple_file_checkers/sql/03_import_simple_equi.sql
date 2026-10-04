@@ -32,7 +32,7 @@ with cte1_raw as (
         t."Equi Type" as equi_type,
         t."Equi Class" as equi_class,
         try_cast(t."Weight kg" as decimal) as weight_kg,
-        try(strptime(t."Startup Date", '%Y-%m-%d')::date) as startup_date,
+        try(strptime(t."Startup Date", '%d.%m.%Y')::date) as startup_date,
         t."Manufacturer" as manufacturer,
         t."Model Number" as model_number,
         t."Manuf Part Number" as manuf_part_number,

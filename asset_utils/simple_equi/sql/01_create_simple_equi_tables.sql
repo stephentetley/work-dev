@@ -31,7 +31,7 @@ create or replace table simple_equi.worklist (
     equi_type varchar,
     equi_class varchar,
     weight_kg decimal,
-    startup_date varchar,
+    startup_date date,
     manufacturer varchar,
     model_number varchar,
     manuf_part_number varchar,
