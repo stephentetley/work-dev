@@ -181,9 +181,12 @@ from cte2_floc_duplicates t;
 
 -- 'Missing Mandatory Data'
 create or replace temporary macro floc_missing_mandatory(colname varchar, longname varchar) as table 
-from query(
-    format('select t.source_row, t.functional_location, ''{}'' as missing1, from simple_floc_worklist t where t.{} is null;', longname, colname)
-);
+select 
+    source_row, 
+    functional_location, 
+    longname as missing1, 
+from simple_floc_worklist 
+where columns(colname) is null;
 
 
 -- 'Missing Mandatory Data'

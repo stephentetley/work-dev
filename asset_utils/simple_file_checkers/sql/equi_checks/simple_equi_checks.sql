@@ -86,9 +86,13 @@ anti join asset_lake.ztables.eqobjl t1
 
 -- 'Missing Mandatory Data'
 create or replace temporary macro equi_missing_mandatory(colname varchar, longname varchar) as table 
-from query(
-    format('select t.source_row, t.temp_id, ''{}'' as missing1, from simple_equi_worklist t where t.{} is null;', longname, colname)
-);
+select 
+    source_row, 
+    temp_id,
+    longname as missing1, 
+from simple_equi_worklist
+where columns(colname) is null;
+
 
 
 -- 'Missing Mandatory Data'
