@@ -21,10 +21,10 @@ create or replace table checker_results (
 );
 
 create or replace table simple_floc_worklist (
-    source_row integer,
+    source_row integer not null,
     batch_number integer,
-    functional_location varchar not null,
-    floc_name varchar not null,
+    functional_location varchar,
+    floc_name varchar,
     floc_category integer,
     str_indicator varchar,
     floc_type varchar,
