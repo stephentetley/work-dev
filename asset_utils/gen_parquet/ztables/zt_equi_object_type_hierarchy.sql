@@ -11,19 +11,25 @@
 --
 
 
-create or replace temporary table zt_equipment_object_type_hierarchy as
+create or replace temporary table zt_equi_object_type_hierarchy as
+with cte1_raw as (
+    select 
+        trim(columns(t.*)),
+    from read_xlsx(
+            getvariable('source_xlsx'), 
+            all_varchar=true) as t
+)
 select
     t."Object Type" as 'object_type',
     t."Object Type_1" as 'object_type_1',
     t."Equipment category" as 'equipment_category',
     t."Remarks" as 'remarks',
-from read_xlsx(
-    getvariable('source_xlsx'), 
-    all_varchar=true) AS t;
+from cte1_raw t;
 
 copy 
-    (select * from zt_equipment_object_type_hierarchy
+    (select * from zt_equi_object_type_hierarchy
     order by object_type, object_type_1, equipment_category)
 to (getvariable('dest_parquet')) (format parquet, compression snappy);
 
+select 'Wrote: ' || getvariable('dest_parquet') as result;
 
