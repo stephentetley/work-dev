@@ -22,15 +22,15 @@ with cte1_raw as (
             all_varchar=true) as t
 )
 select
-    t."Object Type" as 'object_type',
-    t."Object Type_1" as 'object_type_1',
-    t."Equipment category" as 'equipment_category',
-    t."Remarks" as 'remarks',
+    t."Structure indicator" AS 'structure_indicator',
+    t."Object Type" AS 'object_type',
+    t."Object Type_1" AS 'object_type_1',
+    t."Remarks" AS 'remarks',
 from cte1_raw t;
 
 copy (
     select * from temp1
-    order by object_type, object_type_1, equipment_category
+    order by structure_indicator, object_type, object_type_1
 ) to (getvariable('dest_parquet')) (format parquet, compression snappy);
 
 select 'Wrote: ' || getvariable('dest_parquet') as result;
