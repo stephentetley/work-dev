@@ -16,7 +16,7 @@
 load excel;
 
 create or replace temporary macro nulled(str varchar) as 
-    if(str == '', null, str);
+    if(str == '' or upper(str) == 'NULL', null, str);
 
 
 create or replace temporary table temp1 as
@@ -55,7 +55,7 @@ with cte1_raw as (
 )
 select * from cte3_filled;
 
-create or replace temporary view class_chars as
+create or replace temporary view vw_class_chars as
 select
     t.class_name_filled as class_name,
     t.char_name as char_name,
@@ -67,7 +67,7 @@ select
 from temp1 t
 where t.char_name is not null;
 
-create or replace temporary view char_enums as 
+create or replace temporary view vw_char_enums as 
 select
     t.class_name_filled as class_name,
     t.char_name_filled as char_name,
@@ -87,7 +87,7 @@ create or replace temporary macro make_classlist_name() as
     end;
 
 copy (
-    select * from class_chars
+    select * from vw_class_chars
     order by #1, #2, #3
 ) to (make_classlist_name()) (format parquet, compression snappy);
 
@@ -102,7 +102,7 @@ create or replace temporary macro make_enums_name() as
 
 
 copy (
-    select * from char_enums
+    select * from vw_char_enums
     order by #1, #2, #3
 ) to (make_enums_name()) (format parquet, compression snappy);
 
