@@ -6,7 +6,7 @@
 --
 
 -- Preliminaries: 
--- The variables `source_xlsx` and `dest_parquet` are set in 
+-- The variables `source_xlsx` and `dest_dir` are set in 
 -- DuckDb (i.e. not env vars)
 --
 
@@ -31,7 +31,7 @@ from cte1_raw t;
 copy (
     select * from temp1
     order by structure_indicator, object_type, object_type_1
-) to (getvariable('dest_parquet')) (format parquet, compression snappy);
+) to (getvariable('dest_dir') || '/floc_object_type_hierarchy.parquet') (format parquet, compression snappy);
 
-select 'Wrote: ' || getvariable('dest_parquet') as result;
+select 'Wrote: ' || getvariable('dest_dir') || '/floc_object_type_hierarchy.parquet' as result;
 

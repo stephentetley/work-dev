@@ -6,7 +6,7 @@
 --
 
 -- Preliminaries: 
--- The variables `source_xlsx` and `dest_parquet` are set in 
+-- The variables `source_xlsx` and `dest_dir` are set in 
 -- DuckDb (i.e. not env vars)
 --
 
@@ -22,15 +22,14 @@ with cte1_raw as (
             all_varchar=true) as t
 )
 select
-    t."Object Type" AS 'object_type',
     t."Manufacturer" AS 'manufacturer',
-    t."Remarks" AS 'remarks',
+    t."Model Number" AS 'model',
 from cte1_raw t;
 
 copy (
     select * from temp1
-    order by object_type, manufacturer
-) to (getvariable('dest_parquet')) (format parquet, compression snappy);
+    order by manufacturer, model
+) to (getvariable('dest_dir') || '/manuf_model_number.parquet') (format parquet, compression snappy);
 
-select 'Wrote: ' || getvariable('dest_parquet') as result;
+select 'Wrote: ' || getvariable('dest_dir') || '/manuf_model_number.parquet' as result;
 

@@ -6,7 +6,7 @@
 --
 
 -- Preliminaries: 
--- The variables `source_xlsx` and `dest_parquet` are set in 
+-- The variables `source_xlsx` and `dest_dir` are set in 
 -- DuckDb (i.e. not env vars)
 --
 
@@ -35,7 +35,7 @@ from cte1_raw t;
 copy (
     select * from temp1
     order by s4_site_funcloc, ai2_installation_id
-) to (getvariable('dest_parquet')) (format parquet, compression snappy);
+) to (getvariable('dest_dir') || '/site_mapping.parquet') (format parquet, compression snappy);
 
-select 'Wrote: ' || getvariable('dest_parquet') as result;
+select 'Wrote: ' || getvariable('dest_dir') || '/site_mapping.parquet' as result;
 
