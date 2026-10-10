@@ -13,7 +13,7 @@
 .bail on
 load excel;
 
-create or replace temporary table temp1 as
+create or replace temporary table table1 as
 with cte1_raw as (
     select 
         trim(columns(t.*)),
@@ -33,7 +33,7 @@ select
 from cte1_raw t;
 
 copy (
-    select * from temp1
+    select * from table1
     order by s4_site_funcloc, ai2_installation_id
 ) to (getvariable('dest_dir') || '/site_mapping.parquet') (format parquet, compression snappy);
 

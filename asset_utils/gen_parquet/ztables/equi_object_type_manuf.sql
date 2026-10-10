@@ -13,7 +13,7 @@
 .bail on
 load excel;
 
-create or replace temporary table temp1 as
+create or replace temporary table table1 as
 with cte1_raw as (
     select 
         trim(columns(t.*)),
@@ -22,13 +22,13 @@ with cte1_raw as (
             all_varchar=true) as t
 )
 select
-    t."Object Type" AS 'object_type',
-    t."Manufacturer" AS 'manufacturer',
-    t."Remarks" AS 'remarks',
+    t."Object Type" AS object_type,
+    t."Manufacturer" AS manufacturer,
+    t."Remarks" AS remarks,
 from cte1_raw t;
 
 copy (
-    select * from temp1
+    select * from table1
     order by object_type, manufacturer
 ) to (getvariable('dest_dir') || '/equi_object_type_manuf.parquet') (format parquet, compression snappy);
 

@@ -13,7 +13,7 @@
 .bail on
 load excel;
 
-create or replace temporary table temp1 as
+create or replace temporary table table1 as
 with cte1_raw as (
     select 
         trim(columns(t.*)),
@@ -22,14 +22,14 @@ with cte1_raw as (
             all_varchar=true) as t
 )
 select
-    t."Structure indicator" AS 'structure_indicator',
-    t."Object Type" AS 'object_type',
-    t."Object Type_1" AS 'object_type_1',
-    t."Remarks" AS 'remarks',
+    t."Structure indicator" AS structure_indicator,
+    t."Object Type" AS object_type,
+    t."Object Type_1" AS object_type_1,
+    t."Remarks" AS remarks,
 from cte1_raw t;
 
 copy (
-    select * from temp1
+    select * from table1
     order by structure_indicator, object_type, object_type_1
 ) to (getvariable('dest_dir') || '/floc_object_type_hierarchy.parquet') (format parquet, compression snappy);
 

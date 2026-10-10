@@ -13,7 +13,7 @@
 .bail on
 load excel;
 
-create or replace temporary table temp1 as
+create or replace temporary table table1 as
 with cte1_raw as (
     select 
         trim(columns(t.*)),
@@ -22,12 +22,12 @@ with cte1_raw as (
             all_varchar=true) as t
 )
 select
-    t."Object Type" as 'object_type',
-    t."Standard FLoc Description" as 'standard_floc_description',
+    t."Object Type" as object_type,
+    t."Standard FLoc Description" as standard_floc_description,
 from cte1_raw t;
 
 copy (
-    select * from temp1
+    select * from table1
     order by object_type
 ) to (getvariable('dest_dir') || '/floc_object_type_description.parquet') (format parquet, compression snappy);
 
