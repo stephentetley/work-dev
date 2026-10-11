@@ -73,6 +73,7 @@ create or replace temporary macro make_subsys_name(subsys_fstring varchar, subsy
 
 create or replace view s4_hierarchy.vw_annotated_flocs as
 select 
+    t.primary_equi_plinum as primary_equi,
     t.s4_site_funcloc as s4_site,
     t."function",
     t.process_group,

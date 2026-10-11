@@ -8,6 +8,7 @@ select
     'SCS' as process_group,
     'CEP' as process,
     null as system_index,
+    null as system_class,
 
     -- make_system_tag(t2.system_index) as system,
     -- make_system_name(t2.system_fstring, t2.system_index) as system_description,
@@ -17,7 +18,7 @@ select
     'PUMP' as subsys_objtype,
     t.pli_num as primary_equi_plinum,
 from input.ai2_equi t
-join asset_facts.site_mapping t1 on t1.ai2_site_name = t.site_name
+join asset_facts.site_mapping t1 on t1.ai2_installation_name = t.site_name
 where t.process_1_2 = 'CHEMICAL SERVICES/SODIUM HYPOCHLORITE STORAGE'
 and t.equipment_type in ('DIAPHRAGM PUMP');
 
@@ -30,12 +31,12 @@ select
     'NET' as process_group,
     'TEL' as process,
     null as system_index,
-    null as system_description,
     'CTOSSY' as system_class,
+    null as system_description,
     'RTS TELEMETRY SYSTEM' as system_class_description,
     t.pli_num as primary_equi_plinum,
 from input.ai2_equi t
-join asset_facts.site_mapping t1 on t1.ai2_site_name = t.site_name
+join asset_facts.site_mapping t1 on t1.ai2_installation_name = t.site_name
 where t.process_1_2 = 'CONTROL SERVICES/RTS MONITORING'
 and t.equipment_type in ('TELEMETRY OUTSTATION');
 
@@ -52,7 +53,7 @@ select
     'FIXED LIFTING SYSTEM' as system_class_description,
     null as primary_equi_plinum,
 from input.ai2_equi t
-join asset_facts.site_mapping t1 on t1.ai2_site_name = t.site_name
+join asset_facts.site_mapping t1 on t1.ai2_installation_name = t.site_name
 where t.process_1_2 = 'STATUTORY/LIFTING EQUIPMENT'
 and t.equipment_type in ('DAVIT SOCKET');
 
@@ -69,6 +70,6 @@ select
     'PORTABLE LIFTING SYSTEM' as system_class_description,
     null as primary_equi_plinum,
 from input.ai2_equi t
-join asset_facts.site_mapping t1 on t1.ai2_site_name = t.site_name
+join asset_facts.site_mapping t1 on t1.ai2_installation_name = t.site_name
 where t.process_1_2 = 'STATUTORY/LIFTING EQUIPMENT'
 and t.equipment_type in ('DAVIT');
