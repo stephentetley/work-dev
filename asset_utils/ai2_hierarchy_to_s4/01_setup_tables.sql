@@ -35,12 +35,15 @@ create or replace table input.ai2_equi (
 -- supplied and resupplied by the user annotated until all flocs translated
 create or replace table input.user_annos (
     pli_num varchar not null,
-    ai2_description varchar not null,
+    process_group_process varchar,
+    equipment_name varchar,
+    equipment_type varchar,
     system_index integer,
-    system_fstring varchar,
+    system_description_fstring varchar,
     system_class varchar,
+    system_type_description varchar,
     subsys_index integer,
-    subsys_fstring varchar,
+    subsys_description_fstring varchar,
 );
 
 
@@ -68,18 +71,22 @@ create or replace temporary macro make_subsys_tag(prefix3 varchar, sys_ix intege
 create or replace temporary macro make_subsys_name(subsys_fstring varchar, subsys_ix integer) as 
     format(coalesce(subsys_fstring, 'SUBSYSTEM {}'), coalesce(subsys_ix, 0));
 
-create or replace view s4_hierarchy.vw_annotate_flocs as
+create or replace view s4_hierarchy.vw_annotated_flocs as
 select 
     t.s4_site_funcloc as s4_site,
     t."function",
     t.process_group,
     t.process,
     make_system_tag(t1.system_index) as system,
-    make_system_name(t1.system_fstring, t1.system_index) as system_description,
-    t1.system_class as system_class,
     format(t2.fstring, t1.subsys_index) as subsys,
-    -- make_subsys_name(t2.fstring, t2.subsys_index) as subsys_description,
+    make_system_name(t1.system_description_fstring, t1.system_index) as system_description,
+    make_subsys_name(t1.subsys_description_fstring, t1.subsys_index) as subsys_description,
+    coalesce(t1.system_class, t.system_class, '#Missing') as system_class,
+    t1.system_type_description, 
+    t.subsys_objtype as subsys_class,
+    
     -- 'PUMP' as subsys_objtype,
 from s4_hierarchy.floc_translation t
 left join input.user_annos t1 on t1.pli_num = t.primary_equi_plinum
 left join asset_facts.level6_floc_mask_codes t2 on t2.object_type = t.subsys_objtype
+
