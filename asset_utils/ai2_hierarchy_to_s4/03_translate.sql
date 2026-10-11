@@ -1,4 +1,39 @@
 
+-- SLADEN VALLEY/2 WTW/PRELIMINARY TREATMENT-WTW/SCREENING/NO 1 INLET SCREEN/EQUIPMENT: SCREENS
+
+insert into s4_hierarchy.floc_translation by name
+select 
+    t1.s4_site_funcloc as s4_site_funcloc,
+    'subsystem'::translation_type as translation_range,
+    'TWP' as function,
+    'PLT' as process_group,
+    'SCR' as process,
+    null as system_index,
+    null as system_class,
+    'SCRN' as subsys_objtype,
+    t.pli_num as primary_equi_plinum,
+from input.ai2_equi t
+join asset_facts.site_mapping t1 on t1.ai2_installation_name = t.site_name
+where t.process_1_2 = 'PRELIMINARY TREATMENT-WTW/SCREENING'
+and asset_lib.ai2_is_screen(t.equipment_type);
+
+
+insert into s4_hierarchy.floc_translation by name
+select 
+    t1.s4_site_funcloc as s4_site_funcloc,
+    'subsystem'::translation_type as translation_range,
+    'TWP' as function,
+    'CTR' as process_group,
+    'MIE' as process,
+    null as system_index,
+    null as system_class,
+    'PUMP' as subsys_objtype,
+    t.pli_num as primary_equi_plinum,
+from input.ai2_equi t
+join asset_facts.site_mapping t1 on t1.ai2_installation_name = t.site_name
+where t.process_1_2 = 'CHEMICAL SERVICES/BRINE PREPARATION'
+and asset_lib.ai2_is_pump(t.equipment_type);
+
 
 insert into s4_hierarchy.floc_translation by name
 select 
@@ -9,18 +44,12 @@ select
     'CEP' as process,
     null as system_index,
     null as system_class,
-
-    -- make_system_tag(t2.system_index) as system,
-    -- make_system_name(t2.system_fstring, t2.system_index) as system_description,
-    -- t2.system_class as system_class,
-    -- make_subsys_tag('PMP', t2.subsys_index) as subsys,
-    -- make_subsys_name(t2.subsys_fstring, t2.subsys_index) as subsys_description,
     'PUMP' as subsys_objtype,
     t.pli_num as primary_equi_plinum,
 from input.ai2_equi t
 join asset_facts.site_mapping t1 on t1.ai2_installation_name = t.site_name
 where t.process_1_2 = 'CHEMICAL SERVICES/SODIUM HYPOCHLORITE STORAGE'
-and t.equipment_type in ('DIAPHRAGM PUMP');
+and asset_lib.ai2_is_pump(t.equipment_type);
 
 
 insert into s4_hierarchy.floc_translation by name
@@ -55,7 +84,7 @@ select
 from input.ai2_equi t
 join asset_facts.site_mapping t1 on t1.ai2_installation_name = t.site_name
 where t.process_1_2 = 'STATUTORY/LIFTING EQUIPMENT'
-and t.equipment_type in ('DAVIT SOCKET');
+and asset_lib.ai2_is_fixed_lifting(t.equipment_type);
 
 insert into s4_hierarchy.floc_translation by name
 select 
@@ -72,4 +101,4 @@ select
 from input.ai2_equi t
 join asset_facts.site_mapping t1 on t1.ai2_installation_name = t.site_name
 where t.process_1_2 = 'STATUTORY/LIFTING EQUIPMENT'
-and t.equipment_type in ('DAVIT');
+and asset_lib.ai2_is_portable_lifting(t.equipment_type);
