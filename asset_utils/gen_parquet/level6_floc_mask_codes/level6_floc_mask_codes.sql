@@ -41,9 +41,9 @@ with cte1_raw as (
 ), cte3_no_dups as (
     select
         t.object_type,
-        any_value(t.object_type_desription),
-        max(t.mask_code),
-        max(t.fstring),
+        any_value(t.object_type_desription) as object_type_desription,
+        max(t.mask_code) as mask_code,
+        max(t.fstring) as fstring,
     from cte2_columns_defined t
     group by t.object_type
 )
