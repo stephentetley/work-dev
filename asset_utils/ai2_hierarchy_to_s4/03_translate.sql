@@ -1,5 +1,9 @@
-
--- SLADEN VALLEY/2 WTW/PRELIMINARY TREATMENT-WTW/SCREENING/NO 1 INLET SCREEN/EQUIPMENT: SCREENS
+--
+-- Copyright 2026 Stephen Tetley
+-- 
+-- Use of this source code is governed by the Apache 2.0 license
+-- that can be found in the LICENSE file.
+--
 
 insert into s4_hierarchy.floc_translation by name
 select 
