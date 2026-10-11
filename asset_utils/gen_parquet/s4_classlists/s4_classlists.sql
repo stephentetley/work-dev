@@ -81,8 +81,8 @@ where t.char_value is not null;
 
 create or replace temporary macro make_classlist_name() as 
     case 
-        when getvariable('source_xlsx') like '%floc%' then getvariable('dest_dir') || '/s4_floc_classlist.parquet'
-        when getvariable('source_xlsx') like '%equi%' then getvariable('dest_dir') || '/s4_equi_classlist.parquet'
+        when getvariable('source_xlsx') like '%floc%' then getvariable('dest_dir') || '/floc_classlist.parquet'
+        when getvariable('source_xlsx') like '%equi%' then getvariable('dest_dir') || '/equi_classlist.parquet'
         else null
     end;
 
@@ -95,8 +95,8 @@ select 'Wrote: ' || make_classlist_name() as result;
 
 create or replace temporary macro make_enums_name() as 
     case 
-        when getvariable('source_xlsx') like '%floc%' then getvariable('dest_dir') || '/s4_floc_enums.parquet'
-        when getvariable('source_xlsx') like '%equi%' then getvariable('dest_dir') || '/s4_equi_enums.parquet'
+        when getvariable('source_xlsx') like '%floc%' then getvariable('dest_dir') || '/floc_enums.parquet'
+        when getvariable('source_xlsx') like '%equi%' then getvariable('dest_dir') || '/equi_enums.parquet'
         else null
     end;
 
