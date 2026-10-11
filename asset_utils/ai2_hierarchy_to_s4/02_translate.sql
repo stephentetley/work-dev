@@ -1,32 +1,74 @@
-create or replace temporary macro make_system_tag(sys_ix integer) as 
-    format('SYS{:02d}', coalesce(sys_ix, 0));
-
-create or replace temporary macro make_system_name(sys_fstring varchar, sys_ix integer) as 
-    format(coalesce(sys_fstring, 'SYSTEM {}'), coalesce(sys_ix, 0));
-
-create or replace temporary macro make_subsys_tag(prefix3 varchar, sys_ix integer) as 
-    format('{}{:02d}', coalesce(prefix3 , '###'), coalesce(sys_ix, 0));
-
-create or replace temporary macro make_subsys_name(subsys_fstring varchar, subsys_ix integer) as 
-    format(coalesce(subsys_fstring, 'SUBSYSTEM {}'), coalesce(subsys_ix, 0));
 
 
-insert into s4_hierarchy.flocs by name
+insert into s4_hierarchy.floc_translation by name
 select 
-    t.s4_site_code as s4_site,
+    t1.s4_site_funcloc as s4_site_funcloc,
+    'subsystem'::translation_type as translation_range,
     'SSS' as function,
     'SCS' as process_group,
     'CEP' as process,
-    make_system_tag(t2.system_index) as system,
-    make_system_name(t2.system_fstring, t2.system_index) as system_description,
-    t2.system_class as system_class,
-    make_subsys_tag('PMP', t2.subsys_index) as subsys,
-    make_subsys_name(t2.subsys_fstring, t2.subsys_index) as subsys_description,
+    null as system_index,
+
+    -- make_system_tag(t2.system_index) as system,
+    -- make_system_name(t2.system_fstring, t2.system_index) as system_description,
+    -- t2.system_class as system_class,
+    -- make_subsys_tag('PMP', t2.subsys_index) as subsys,
+    -- make_subsys_name(t2.subsys_fstring, t2.subsys_index) as subsys_description,
     'PUMP' as subsys_objtype,
-from input.sites t
-join input.ai2_equi t1 on t1.site_name = t.ai2_site_name
-left join input.user_annos t2 on t2.pli_num = t1.pli_num
-where t1.process_1_2 = 'CHEMICAL SERVICES/SODIUM HYPOCHLORITE STORAGE'
-and t1.equipment_type in ('DIAPHRAGM PUMP');
+    t.pli_num as primary_equi_plinum,
+from input.ai2_equi t
+join asset_facts.site_mapping t1 on t1.ai2_site_name = t.site_name
+where t.process_1_2 = 'CHEMICAL SERVICES/SODIUM HYPOCHLORITE STORAGE'
+and t.equipment_type in ('DIAPHRAGM PUMP');
 
 
+insert into s4_hierarchy.floc_translation by name
+select 
+    t1.s4_site_funcloc as s4_site_funcloc,
+    'system'::translation_type as translation_range,
+    'CAA' as function,
+    'NET' as process_group,
+    'TEL' as process,
+    null as system_index,
+    null as system_description,
+    'CTOSSY' as system_class,
+    'RTS TELEMETRY SYSTEM' as system_class_description,
+    t.pli_num as primary_equi_plinum,
+from input.ai2_equi t
+join asset_facts.site_mapping t1 on t1.ai2_site_name = t.site_name
+where t.process_1_2 = 'CONTROL SERVICES/RTS MONITORING'
+and t.equipment_type in ('TELEMETRY OUTSTATION');
+
+insert into s4_hierarchy.floc_translation by name
+select 
+    t1.s4_site_funcloc as s4_site_funcloc,
+    'system'::translation_type as translation_range,
+    'SMS' as function,
+    'LFT' as process_group,
+    'FLT' as process,
+    1 as system_index,
+    'Fixed Lifting' as system_description,
+    'SLFSSY' as system_class,
+    'FIXED LIFTING SYSTEM' as system_class_description,
+    null as primary_equi_plinum,
+from input.ai2_equi t
+join asset_facts.site_mapping t1 on t1.ai2_site_name = t.site_name
+where t.process_1_2 = 'STATUTORY/LIFTING EQUIPMENT'
+and t.equipment_type in ('DAVIT SOCKET');
+
+insert into s4_hierarchy.floc_translation by name
+select 
+    t1.s4_site_funcloc as s4_site_funcloc,
+    'system'::translation_type as translation_range,
+    'SMS' as function,
+    'LFT' as process_group,
+    'PRL' as process,
+    1 as system_index,
+    'Portable Lifting' system_description,
+    'SLFSSY' as system_class,
+    'PORTABLE LIFTING SYSTEM' as system_class_description,
+    null as primary_equi_plinum,
+from input.ai2_equi t
+join asset_facts.site_mapping t1 on t1.ai2_site_name = t.site_name
+where t.process_1_2 = 'STATUTORY/LIFTING EQUIPMENT'
+and t.equipment_type in ('DAVIT');
