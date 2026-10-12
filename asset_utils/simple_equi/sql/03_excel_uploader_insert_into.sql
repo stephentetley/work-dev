@@ -46,6 +46,7 @@ select
     t.user_status as status_of_an_object,
     t.user_status as status_without_stsno,
 from simple_equi.worklist t
+-- TODO uses `asset_facts_catalog`
 left join simple_equi.catalog_profile t1 on t1.cat_prof = t.equi_class;
 
     

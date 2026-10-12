@@ -52,6 +52,7 @@ create or replace table simple_equi.worklist (
     primary key (temp_id)
 );
 
+-- TODO uses `asset_facts_catalog`
 create or replace table simple_equi.catalog_profile (
     cat_prof varchar not null,
     description varchar,
