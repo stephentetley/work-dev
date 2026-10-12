@@ -36,3 +36,4 @@ copy (
 ) to (getvariable('dest_path')) (format parquet, compression snappy);
 
 select 'Wrote: ' || getvariable('dest_path') as result;
+
