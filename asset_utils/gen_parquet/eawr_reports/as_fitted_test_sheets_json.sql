@@ -19,10 +19,10 @@ create or replace temporary macro nulled(str varchar) as
 create or replace temporary macro norm_text(str varchar) as
     trim(str).regexp_replace('\s+', ' ', 'g').nulled();
 
-create or replace macro make_search_glob() as
+create or replace temporary macro make_search_glob() as
     getvariable('source_json_dir') || '/*.json';
 
-create or replace table table1 as
+create or replace temporary table table1 as
 select 
     norm_text(columns(* exclude(checklist_year))),
     checklist_year as checklist_year,
