@@ -11,6 +11,7 @@
 -- `asset_lib_catalog` is attached as `asset_lib` (read_only)
 -- The variable `worklist_xlsx` is set in DuckDb (i.e. not an env var)
 -- The variable `existing_flocs_parquet` is set in DuckDb (i.e. not an env var)
+-- The variable `dest_xlsx` is set in DuckDb (i.e. not an env var)
 
 
 
@@ -37,7 +38,7 @@ create or replace table existing_flocs (
     user_status varchar,
     startup_date date,
     cost_center integer,
-    maint_work_center varchar,
+    main_work_center varchar,
     maintenance_plant varchar,
     plant_section varchar,
     easting integer,
@@ -92,10 +93,11 @@ group by gen_funcloc;
 create or replace view vw_new_flocs as 
 select 
     t.* exclude(easting, northing, user_status),
-    t1.existing_ancestor as existing_ancestor,
-    t2.startup_date as startup_date,
-    t2.cost_center as cost_center,
-    t2.maintenance_plant as maintenance_plant,
+    t1.existing_ancestor,
+    t2.startup_date,
+    t2.cost_center,
+    t2.main_work_center,
+    t2.maintenance_plant,
     if (t.floc_category = 4, t.floc_type, null) as plant_section,
     coalesce(t.user_status, t2.user_status) as user_status,
     coalesce(t.easting, t2.easting) as easting,
@@ -150,7 +152,7 @@ select
     t.user_status,
     t.startup_date,
     t.cost_center,
-    t.main_work_center as maint_work_center,
+    t.main_work_center,
     t.maint_plant as maintenance_plant,
     t.plant_section,
     t.easting,
@@ -305,85 +307,43 @@ ORDER BY funcloc
 );
 
 
--- INSERT INTO sqlite_db.floc_create_functional_location BY NAME
-SELECT
-    1 as batch_number,
-    t.funcloc AS functional_location,
-    t.floc_name AS floc_description,
-    t.floc_category AS category,
-    'YW-GS' AS str_indicator,
-    t.floc_type AS object_type,
-    strftime(t.startup_date, '%d.%m.%Y') AS start_up_date,
-    strftime(t.startup_date, '%Y') AS construct_year,
-    strftime(t.startup_date, '%m') AS construct_mth,    
-    t.maintenance_plant AS maint_plant,
-    t.plant_section AS plant_section,
-    IF(t.floc_category IN ('5', '6'), 'X', null) AS installation_allowed,
-    'ZFLOCST' AS status_profile,
-    t.user_status AS user_status,
-    t.user_status AS status_of_an_object,
-FROM vw_new_flocs t
-order by batch_number, functional_location;
+create table floc_delta_simple_floc as 
+select 
+    1 as "Batch Number",
+    t.funcloc as "Functional Location",
+    t.floc_name  as "Floc Name",
+    t.floc_category as "Category",
+    'YW-GS' as "Str Indicator",
+    t.floc_type as "Floc Type",
+    t.floc_class as "Level5 System Class",
+    t.level5_system_name as "Level5 System Name",
+    strftime(t.startup_date, '%d.%m.%Y') as "Startup Date",
+    t.maintenance_plant as "Maint Plant",
+    t.cost_center as "Cost Center",
+    t.main_work_center as "Main Work Center",
+    t.plant_section as "Plant Section",
+    if(t.floc_category >= 5, 'X', null) "Installation Allowed",
+    t.user_status as "User Status",
+    t.aib_reference as "AI2 SAI Number",
+    null as "Grid Ref",
+    t.easting as "Easting",
+    t.northing as "Northing",
+    t.solution_id as "Solution ID",
+    null as "Position",
+from vw_new_flocs t
+order by t.funcloc;
 
-    
-
--- SOLUTION_ID
--- INSERT INTO sqlite_db.floc_create_classification BY NAME
-SELECT
-    1 as batch_number,
-    t.funcloc AS functional_location,
-    'SOLUTION_ID' AS class,
-    'SOLUTION_ID' AS characteristics,
-    t.solution_id AS char_value,
-FROM vw_new_flocs t
-WHERE t.solution_id IS NOT NULL;
-
--- EASTING
--- INSERT INTO sqlite_db.floc_create_classification BY NAME
-SELECT
-    1 as batch_number,
-    t.funcloc AS functional_location,
-    'EAST_NORTH' AS class,
-    'EASTING' AS characteristics,
-    printf('%d', t.easting) AS char_value,
-FROM vw_new_flocs t
-WHERE t.easting IS NOT NULL;
-
-
--- NORTHING
--- INSERT INTO sqlite_db.floc_create_classification BY NAME
-SELECT
-    1 as batch_number,
-    t.funcloc AS functional_location,
-    'EAST_NORTH' AS class,
-    'NORTHING' AS characteristics,
-    printf('%d', t.northing) AS char_value,
-FROM vw_new_flocs t
-WHERE t.northing IS NOT NULL;
-
--- Level 5 systems with SYSTEM_TYPE
--- INSERT INTO sqlite_db.floc_create_classification BY NAME
-SELECT
-    1 as batch_number,
-    t.funcloc AS functional_location,
-    t.floc_class AS class,
-    'SYSTEM_TYPE' AS characteristics,
-    t.level5_system_name AS char_value,
-FROM vw_new_flocs t
-WHERE t.level5_system_name IS NOT NULL;
-
-
--- AI2_AIB_REFERENCE
--- INSERT INTO sqlite_db.floc_create_classification BY NAME
-SELECT
-    1 as batch_number,
-    t.funcloc AS functional_location,
-    'AIB_REFERENCE' AS class,
-    'AI2_AIB_REFERENCE' AS characteristics,
-    t.aib_reference AS char_value,
-FROM vw_new_flocs t;
+select * from floc_delta_simple_floc;
 
 
 
+-- Set the variable `dest_xlsx` before running this file
+select getvariable('dest_xlsx') as dest_xlsx;
 
 
+-- Don't fix the output table name...
+copy (
+    select * from floc_delta_simple_floc order by "Functional Location"
+) to (getvariable('dest_xlsx')) (format xlsx, header true, sheet 'NewFloc');
+
+select 'Wrote: ' || getvariable('dest_xlsx') as result;
