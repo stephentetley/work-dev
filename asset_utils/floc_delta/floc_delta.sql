@@ -15,7 +15,6 @@
 
 
 
-
 --
 create or replace table worklist(
     requested_floc varchar not null,
@@ -165,11 +164,8 @@ from cte1_source t;
 -- 
 
 
-    
--- DELETE FROM existing_and_new_flocs;
 INSERT INTO existing_and_new_flocs BY NAME (
-WITH 
-cte1 AS (
+WITH cte1 AS (
     SELECT 
         t.requested_floc AS floc, 
         t.floc_description AS source_name,
@@ -287,10 +283,10 @@ UNION BY NAME
     source_type AS floc_type, 
     NULL AS floc_class,
     level5 AS parent_floc,
-    user_status AS user_status,
-    easting AS easting,
-    northing AS northing,
-    solution_id as solution_id,
+    user_status,
+    easting,
+    northing,
+    solution_id,
     NULL AS level5_system_name,
 FROM cte2 WHERE cte2.floc_category = 6)
 ORDER BY funcloc

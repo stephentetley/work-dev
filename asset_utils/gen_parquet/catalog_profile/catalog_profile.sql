@@ -14,8 +14,17 @@
 -- DuckDb (i.e. not env vars)
 --
 
+
 .bail on
 load excel;
+
+
+select 
+    ifnull(getvariable('source_txt'), error('Must set variable "source_txt"')) as source_txt,
+    ifnull(getvariable('dest_dir'), error('Must set variable "dest_dir"')) as dest_dir,
+;
+
+
 
 create or replace temporary macro nulled(str varchar) as 
     if(str == '' or upper(str) == 'NULL', null, str);
