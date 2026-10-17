@@ -10,7 +10,16 @@
 -- DuckDb (i.e. not env vars)
 --
 
+.bail on
 
+with cte1_variables as (
+select 
+    ifnull(getvariable('source_tsv'), error('Must set variable "source_tsv"')) as source_tsv,
+    ifnull(getvariable('dest_path'), error('Must set variable "dest_path"')) as dest_path,
+)
+unpivot cte1_variables
+on columns(*)
+into name variable value value;
 
 create or replace temporary macro nulled(str varchar) as 
     if(str == '' or upper(str) == 'NULL', null, str);
@@ -45,9 +54,10 @@ with cte1_raw as (
 )
 select * from cte2_refine_columns;
 
--- Don't fix the output table name...
+-- Don't fix the output table name, expect multiple runs...
 copy (
     select * from table1 order by filename, point_number
 ) to (getvariable('dest_path')) (format parquet, compression snappy);
 
 select 'Wrote: ' || getvariable('dest_path') as result;
+

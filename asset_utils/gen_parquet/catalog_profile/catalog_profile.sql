@@ -18,11 +18,14 @@
 .bail on
 load excel;
 
-
+with cte1_variables as (
 select 
     ifnull(getvariable('source_txt'), error('Must set variable "source_txt"')) as source_txt,
     ifnull(getvariable('dest_dir'), error('Must set variable "dest_dir"')) as dest_dir,
-;
+)
+unpivot cte1_variables
+on columns(*)
+into name variable value value;
 
 
 
@@ -93,7 +96,7 @@ with cte1_raw as (
 select cat_prof, description from cte4_fixup;
 
 
-
+-- Write to `dest_dir`, file_name is fixed...
 copy (
     select * from table1
     order by cat_prof

@@ -6,9 +6,22 @@
 --
 
 -- Preliminaries: 
--- The variables `source_xlsx` and `dest_path` are set in 
+-- The variables `source_xlsx` and `dest_parquet` are set in 
 -- DuckDb (i.e. not env vars)
 --
+
+.bail on
+load excel;
+
+with cte1_variables as (
+select 
+    ifnull(getvariable('source_xlsx'), error('Must set variable "source_xlsx"')) as source_xlsx,
+    ifnull(getvariable('dest_parquet'), error('Must set variable "dest_parquet"')) as dest_parquet,
+)
+unpivot cte1_variables
+on columns(*)
+into name variable value value;
+
 
 create or replace temporary macro nulled(str varchar) as 
     if(str == '' or upper(str) == 'NULL', null, str);
@@ -56,10 +69,10 @@ select
 from table1 t
 group by all;
 
--- Don't fix the output table name...
+-- Don't fix the output table name, user defined...
 copy (
     select * from vw_table1 order by functional_location
-) to (getvariable('dest_path')) (format parquet, compression snappy);
+) to (getvariable('dest_parquet')) (format parquet, compression snappy);
 
-select 'Wrote: ' || getvariable('dest_path') as result;
+select 'Wrote: ' || getvariable('dest_parquet') as result;
 

@@ -13,6 +13,15 @@
 .bail on
 load excel;
 
+with cte1_variables as (
+select 
+    ifnull(getvariable('source_xlsx'), error('Must set variable "source_xlsx"')) as source_xlsx,
+    ifnull(getvariable('dest_dir'), error('Must set variable "dest_dir"')) as dest_dir,
+)
+unpivot cte1_variables
+on columns(*)
+into name variable value value;
+
 create or replace temporary table table1 as
 with cte1_raw as (
     select 
@@ -26,6 +35,7 @@ select
     t."Standard FLoc Description" as standard_floc_description,
 from cte1_raw t;
 
+-- Write to `dest_dir`, file_name is fixed...
 copy (
     select * from table1
     order by object_type

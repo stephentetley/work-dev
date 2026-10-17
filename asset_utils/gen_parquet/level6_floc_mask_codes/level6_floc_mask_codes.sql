@@ -13,6 +13,16 @@
 .bail on
 load excel;
 
+with cte1_variables as (
+select 
+    ifnull(getvariable('source_xlsx'), error('Must set variable "source_xlsx"')) as source_xlsx,
+    ifnull(getvariable('dest_dir'), error('Must set variable "dest_dir"')) as dest_dir,
+)
+unpivot cte1_variables
+on columns(*)
+into name variable value value;
+
+
 create or replace temporary macro make_num_fstring(hashes varchar) as 
     case length(hashes)
         when 2 then '{:02d}'
@@ -49,6 +59,7 @@ with cte1_raw as (
 )
 select * from cte3_no_dups;
 
+-- Write to `dest_dir`, file_name is fixed...
 copy (
     select * from table1
     order by object_type

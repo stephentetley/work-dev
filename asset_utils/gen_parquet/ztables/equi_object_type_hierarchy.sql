@@ -28,6 +28,7 @@ select
     t."Remarks" as remarks,
 from cte1_raw t;
 
+-- Write to `dest_dir`, file_name is fixed...
 copy (
     select * from table1
     order by object_type, object_type_1, equipment_category

@@ -13,6 +13,16 @@
 -- to json (by a separate program, too complicated to do in SQL).
 --
 
+with cte1_variables as (
+select 
+    ifnull(getvariable('source_json_dir'), error('Must set variable "source_json_dir"')) as source_json_dir,
+    ifnull(getvariable('dest_path'), error('Must set variable "dest_path"')) as dest_path,
+)
+unpivot cte1_variables
+on columns(*)
+into name variable value value;
+
+
 create or replace temporary macro nulled(str varchar) as 
     if(str == '' or upper(str) == 'NULL', null, str);
 
@@ -30,7 +40,7 @@ from read_json(
     make_search_glob()
 );
 
--- Don't fix the output table name...
+-- Don't fix the output table name, expect multiple runs...
 copy (
     select * from table1
 ) to (getvariable('dest_path')) (format parquet, compression snappy);

@@ -13,6 +13,18 @@
 .bail on
 load excel;
 
+with cte1_variables as (
+select 
+    ifnull(getvariable('ata_source_xlsx'), error('Must set variable "ata_source_xlsx"')) as ata_source_xlsx,
+    ifnull(getvariable('attr_sets_source_xlsx'), error('Must set variable "attr_sets_source_xlsx"')) as attr_sets_source_xlsx,
+    ifnull(getvariable('dest_dir'), error('Must set variable "dest_dir"')) as dest_dir,
+)
+unpivot cte1_variables
+on columns(*)
+into name variable value value;
+
+
+
 create or replace temporary macro decode_data_type(dtype varchar) as 
 case 
     when (dtype) = 'AIYEAR4'                        then 'integer'
@@ -105,7 +117,7 @@ join asset_types_attributes t1
     on t1.class_description = t.class_name
     and t1.attribute_set_name = t.attribute_set_name;
 
-
+-- Write to `dest_dir`, file_name is fixed...
 copy (
     select * from vw_ai2_equi_classes
     order by class_name, attribute_set_name, attribute_name

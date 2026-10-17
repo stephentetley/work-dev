@@ -15,6 +15,16 @@
 .bail on
 load excel;
 
+with cte1_variables as (
+select 
+    ifnull(getvariable('source_xlsx'), error('Must set variable "source_xlsx"')) as source_xlsx,
+    ifnull(getvariable('dest_dir'), error('Must set variable "dest_dir"')) as dest_dir,
+)
+unpivot cte1_variables
+on columns(*)
+into name variable value value;
+
+
 create or replace temporary macro nulled(str varchar) as 
     if(str == '' or upper(str) == 'NULL', null, str);
 
@@ -100,7 +110,7 @@ create or replace temporary macro make_enums_name() as
         else null
     end;
 
-
+-- Don't fix the output table name, expect two runs (floc and equi)...
 copy (
     select * from vw_char_enums
     order by #1, #2, #3
