@@ -9,10 +9,9 @@
 -- Preliminaries: 
 -- Must have a sqlite database attached called `sqlite_db` (read-write)
 -- and `asset_facts` and `asset_lib` DuckDB catalogs attached as read only
--- The variables `simple_equi_parquet` is set in DuckDB 
--- (i.e. not an env var)
+-- The variable `simple_equi_parquet` is set in DuckDB (i.e. not an env var)
 --
--- Run from DuckDB - no need for standalone SQLite is installed 
+-- Run from DuckDB - no need for standalone SQLite to be installed 
 -- 
 
 .bail on
