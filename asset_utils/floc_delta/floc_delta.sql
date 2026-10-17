@@ -9,14 +9,44 @@
 -- Preliminaries: 
 -- `asset_facts_catalog` is attached as `asset_facts` (read_only)
 -- `asset_lib_catalog` is attached as `asset_lib` (read_only)
--- The variable `worklist_xlsx` is set in DuckDb (i.e. not an env var)
+-- The variable `floc_delta_worklist_xlsx` is set in DuckDb (i.e. not an env var)
 -- The variable `existing_flocs_parquet` is set in DuckDb (i.e. not an env var)
--- The variable `dest_xlsx` is set in DuckDb (i.e. not an env var)
+-- The variable `dest_simple_floc_xlsx` is set in DuckDb (i.e. not an env var)
 
+.bail on
+load excel;
+
+with cte1_variables as (
+select 
+    ifnull(getvariable('floc_delta_worklist_xlsx'), error('Must set variable "floc_delta_worklist_xlsx"')) as floc_delta_worklist_xlsx,
+    ifnull(getvariable('existing_flocs_parquet'), error('Must set variable "existing_flocs_parquet"')) as existing_flocs_parquet,
+    ifnull(getvariable('dest_simple_floc_xlsx'), error('Must set variable "dest_simple_floc_xlsx"')) as dest_simple_floc_xlsx,
+)
+unpivot cte1_variables
+on columns(*)
+into name variable value value;
+
+
+
+create or replace temporary macro nulled(str varchar) as 
+    if(str == '' or upper(str) == 'null', null, str);
+
+with cte1_databases as (
+select 
+    if(exists (from duckdb_databases() where database_name = 'asset_facts'), 
+        true, 
+        error('Must attach database "asset_facts"')) as asset_facts,
+    if(exists (from duckdb_databases() where database_name = 'asset_lib'), 
+        true, 
+        error('Must attach database "asset_lib"')) as asset_lib,
+)
+unpivot cte1_databases
+on columns(*)
+into name database value loaded;
 
 
 --
-create or replace table worklist(
+create or replace temporary table worklist(
     requested_floc varchar not null,
     floc_description varchar,
     object_type varchar,
@@ -30,7 +60,7 @@ create or replace table worklist(
     primary key (requested_floc)
 );
 
-create or replace table existing_flocs (
+create or replace temporary table existing_flocs (
     funcloc varchar not null,
     floc_name varchar,
     floc_category integer,
@@ -46,7 +76,7 @@ create or replace table existing_flocs (
 );
 
 
-create or replace table existing_and_new_flocs (
+create or replace temporary table existing_and_new_flocs (
     funcloc varchar,
     floc_name varchar,
     floc_category integer,
@@ -62,7 +92,7 @@ create or replace table existing_and_new_flocs (
     );
 
 
-create or replace table new_generated_flocs (
+create or replace temporary table new_generated_flocs (
     funcloc varchar not null,
     floc_name varchar,
     floc_category integer,
@@ -77,7 +107,7 @@ create or replace table new_generated_flocs (
     primary key (funcloc)
     );
 
-create or replace view vw_existing_ancestor as 
+create or replace temporary view vw_existing_ancestor as 
 with cte1_join_new_and_old as (
     select 
         t.funcloc as gen_funcloc, 
@@ -89,7 +119,7 @@ select gen_funcloc as new_funcloc, max(ancestor) as existing_ancestor
 from cte1_join_new_and_old
 group by gen_funcloc;
 
-create or replace view vw_new_flocs as 
+create or replace temporary view vw_new_flocs as 
 select 
     t.* exclude(easting, northing, user_status),
     t1.existing_ancestor,
@@ -107,36 +137,40 @@ left outer join vw_existing_ancestor t1 on t1.new_funcloc = t.funcloc
 left outer join existing_flocs t2 on t2.funcloc = t1.existing_ancestor
 left outer join worklist t3 on t3.requested_floc = t.funcloc;
 
--- Set the variable `worklist_xlsx` before running this file
-select getvariable('worklist_xlsx') as worklist_xlsx;
 
 insert into worklist by name
-with cte1_source as (
+with cte1_raw as (
     select 
-        t."Requested Floc" AS requested_floc,
-        t."Name" AS floc_description,
-        t."Object Type" AS object_type,
-        t."Level 5 Class Type" AS class_type,
-        t."Asset Status" AS user_status,
-        t."Level 5 System Type Name" AS level5_system_name,
-        t."AIB Reference" AS aib_reference,
-        t."Solution ID" AS solution_id,
-        asset_lib.get_east_north(t."Grid Ref (Override)") AS __grid_ref,
+        nulled_trim(columns(t.*))
     from read_xlsx(
-        getvariable('worklist_xlsx'),
+        getvariable('floc_delta_worklist_xlsx'),
         all_varchar=true, 
         sheet='Flocs'
-    ) AS t
+    ) as t
+), cte2_defined_columns as (
+    select 
+        t."Requested Floc" as requested_floc,
+        t."Name" as floc_description,
+        t."Object Type" as object_type,
+        t."Level 5 Class Type" as class_type,
+        t."Asset Status" as user_status,
+        t."Level 5 System Type Name" as level5_system_name,
+        t."AIB Reference" as aib_reference,
+        t."Solution ID" as solution_id,
+        asset_lib.get_east_north(t."Grid Ref (Override)") as __grid_ref,
+    from read_xlsx(
+        getvariable('floc_delta_worklist_xlsx'),
+        all_varchar=true, 
+        sheet='Flocs'
+    ) as t
 ) 
 select 
     t.* exclude(__grid_ref),
-    t.__grid_ref['easting'] AS easting,
-    t.__grid_ref['northing'] AS northing,
-from cte1_source t;
+    t.__grid_ref['easting'] as easting,
+    t.__grid_ref['northing'] as northing,
+from cte2_defined_columns t;
 
 
--- Set the variable `existing_flocs_parquet` before running this file
-select getvariable('existing_flocs_parquet') as existing_flocs_parquet;
 
 insert into existing_flocs by name
 with cte1_source as (
@@ -164,146 +198,144 @@ from cte1_source t;
 -- 
 
 
-INSERT INTO existing_and_new_flocs BY NAME (
-WITH cte1 AS (
-    SELECT 
-        t.requested_floc AS floc, 
-        t.floc_description AS source_name,
-        t.object_type AS source_type,
-        t.class_type AS source_class_type,
-        regexp_split_to_array(floc, '-') AS arr,
+insert into existing_and_new_flocs by name (
+with cte1_worklist_items as (
+    select 
+        t.requested_floc as floc, 
+        t.floc_description as source_name,
+        t.object_type as source_type,
+        t.class_type as source_class_type,
+        regexp_split_to_array(floc, '-') as arr,
         len(arr) as floc_category,
         list_extract(arr, 1) as site,
-        list_extract(arr, 2) AS func,
-        list_extract(arr, 3) AS proc_grp,
-        list_extract(arr, 4) AS proc,
-        list_extract(arr, 5) AS sysm,
-        list_extract(arr, 6) AS subsysm,
-        IF (func        IS NOT NULL, concat_ws('-', site, func), NULL) AS level2,
-        IF (proc_grp    IS NOT NULL, concat_ws('-', site, func, proc_grp), NULL) AS level3,
-        IF (proc        IS NOT NULL, concat_ws('-', site, func, proc_grp, proc), NULL) AS level4,
-        IF (sysm        IS NOT NULL, concat_ws('-', site, func, proc_grp, proc, sysm), NULL) AS level5,
-        IF (floc_category = 6,       concat_ws('-', site, func, proc_grp, proc, sysm, subsysm), NULL) AS level6,
-        t.user_status AS user_status,
-        t.easting AS easting,
-        t.northing AS northing,
-        t.solution_id AS solution_id,
-        t.level5_system_name AS level5_system_name,
-    FROM worklist t
-), cte2 AS (
-    SELECT 
+        list_extract(arr, 2) as func,
+        list_extract(arr, 3) as proc_grp,
+        list_extract(arr, 4) as proc,
+        list_extract(arr, 5) as sysm,
+        list_extract(arr, 6) as subsysm,
+        if (func        is not null, concat_ws('-', site, func), null) as level2,
+        if (proc_grp    is not null, concat_ws('-', site, func, proc_grp), null) as level3,
+        if (proc        is not null, concat_ws('-', site, func, proc_grp, proc), null) as level4,
+        if (sysm        is not null, concat_ws('-', site, func, proc_grp, proc, sysm), null) as level5,
+        if (floc_category = 6,       concat_ws('-', site, func, proc_grp, proc, sysm, subsysm), null) as level6,
+        t.user_status as user_status,
+        t.easting as easting,
+        t.northing as northing,
+        t.solution_id as solution_id,
+        t.level5_system_name as level5_system_name,
+    from worklist t
+), cte2_add_234_descriptions as (
+    select 
         t1.*,
-        t2.standard_floc_description AS name_2,
-        t3.standard_floc_description AS name_3,
-        t4.standard_floc_description AS name_4,
-    FROM cte1 t1
-    LEFT JOIN asset_facts.ztables.floc_object_type_description t2 ON t2.object_type = t1.func
-    LEFT JOIN asset_facts.ztables.floc_object_type_description t3 ON t3.object_type = t1.proc_grp
-    LEFT JOIN asset_facts.ztables.floc_object_type_description t4 ON t4.object_type = t1.proc
+        t2.standard_floc_description as name_2,
+        t3.standard_floc_description as name_3,
+        t4.standard_floc_description as name_4,
+    from cte1_worklist_items t1
+    left join asset_facts.ztables.floc_object_type_description t2 on t2.object_type = t1.func
+    left join asset_facts.ztables.floc_object_type_description t3 on t3.object_type = t1.proc_grp
+    left join asset_facts.ztables.floc_object_type_description t4 on t4.object_type = t1.proc
 )  
-(SELECT  
+(select  
     -- Level 1 (site)
-    site AS funcloc,
-    source_name AS floc_name,
-    1 AS floc_category,
-    'SITE' AS floc_type,
-    NULL AS floc_class,
-    NULL AS parent_floc,
-    NULL AS user_status,
-    NULL AS easting,
-    NULL AS northing,
-    NULL AS solution_id,
-FROM cte2 WHERE cte2.floc_category = 1)
-UNION BY NAME
-(SELECT 
+    site as funcloc,
+    source_name as floc_name,
+    1 as floc_category,
+    'SITE' as floc_type,
+    null as floc_class,
+    null as parent_floc,
+    null as user_status,
+    null as easting,
+    null as northing,
+    null as solution_id,
+from cte2_add_234_descriptions where cte2_add_234_descriptions.floc_category = 1)
+union by name
+(select 
     -- Level 2 (function)
-    level2 AS funcloc,
-    name_2 AS floc_name,
-    2 AS floc_category,
-    func AS floc_type,
-    NULL AS floc_class,
-    site AS parent_floc,
-    NULL AS user_status,
-    NULL AS easting,
-    NULL AS northing,
-    NULL AS solution_id,
-    NULL AS level5_system_name,
-FROM cte2 WHERE cte2.level2 IS NOT NULL)
-UNION BY NAME 
-(SELECT 
+    level2 as funcloc,
+    name_2 as floc_name,
+    2 as floc_category,
+    func as floc_type,
+    null as floc_class,
+    site as parent_floc,
+    null as user_status,
+    null as easting,
+    null as northing,
+    null as solution_id,
+    null as level5_system_name,
+from cte2_add_234_descriptions where cte2_add_234_descriptions.level2 is not null)
+union by name 
+(select 
     -- Level 3 (process group)
-    level3 AS funcloc,
-    name_3 AS floc_name,
-    3 AS floc_category,
-    proc_grp AS floc_type,
-    NULL AS floc_class,
-    level2 AS parent_floc,
-    NULL AS user_status,
-    NULL AS easting,
-    NULL AS northing,
-    NULL AS solution_id,
-    NULL AS level5_system_name,
-FROM cte2 WHERE cte2.level3 IS NOT NULL)
-UNION BY NAME
-(SELECT 
+    level3 as funcloc,
+    name_3 as floc_name,
+    3 as floc_category,
+    proc_grp as floc_type,
+    null as floc_class,
+    level2 as parent_floc,
+    null as user_status,
+    null as easting,
+    null as northing,
+    null as solution_id,
+    null as level5_system_name,
+from cte2_add_234_descriptions where cte2_add_234_descriptions.level3 is not null)
+union by name
+(select 
     -- Level 4 (process)
-    level4 AS funcloc,
-    name_4 AS floc_name,
-    4 AS floc_category,
-    proc AS floc_type,
-    NULL AS floc_class,
-    level3 AS parent_floc,
-    NULL AS user_status,
-    NULL AS easting,
-    NULL AS northing,
-    NULL AS solution_id,
-    NULL AS level5_system_name,
-FROM cte2 WHERE cte2.level4 IS NOT NULL)
-UNION BY NAME
-(SELECT 
+    level4 as funcloc,
+    name_4 as floc_name,
+    4 as floc_category,
+    proc as floc_type,
+    null as floc_class,
+    level3 as parent_floc,
+    null as user_status,
+    null as easting,
+    null as northing,
+    null as solution_id,
+    null as level5_system_name,
+from cte2_add_234_descriptions where cte2_add_234_descriptions.level4 is not null)
+union by name
+(select 
     -- Level 5 (system)
-    level5 AS funcloc, 
-    source_name AS floc_name, 
-    5 AS floc_category,
-    source_class_type AS floc_class,
-    source_type AS floc_type, 
-    level4 AS parent_floc,
-    user_status AS user_status,
-    easting AS easting,
-    northing AS northing,
+    level5 as funcloc, 
+    source_name as floc_name, 
+    5 as floc_category,
+    source_class_type as floc_class,
+    source_type as floc_type, 
+    level4 as parent_floc,
+    user_status as user_status,
+    easting as easting,
+    northing as northing,
     solution_id as solution_id,
-    level5_system_name AS level5_system_name,
-FROM cte2 WHERE cte2.floc_category = 5)
-UNION BY NAME
-(SELECT 
+    level5_system_name as level5_system_name,
+from cte2_add_234_descriptions where cte2_add_234_descriptions.floc_category = 5)
+union by name
+(select 
     -- Level 6 (subsystem)
-    level6 AS funcloc, 
-    source_name AS floc_name,
-    6 AS floc_category,
-    source_type AS floc_type, 
-    NULL AS floc_class,
-    level5 AS parent_floc,
+    level6 as funcloc, 
+    source_name as floc_name,
+    6 as floc_category,
+    source_type as floc_type, 
+    null as floc_class,
+    level5 as parent_floc,
     user_status,
     easting,
     northing,
     solution_id,
-    NULL AS level5_system_name,
-FROM cte2 WHERE cte2.floc_category = 6)
-ORDER BY funcloc
+    null as level5_system_name,
+from cte2_add_234_descriptions where cte2_add_234_descriptions.floc_category = 6)
+order by funcloc
 );
 
 
-
-
-INSERT INTO new_generated_flocs BY NAME (
-SELECT t1.* 
-FROM existing_and_new_flocs t1
-ANTI JOIN existing_flocs t2 ON t2.funcloc = t1.funcloc
-ORDER BY funcloc
+insert into new_generated_flocs by name (
+select t1.* 
+from existing_and_new_flocs t1
+anti join existing_flocs t2 on t2.funcloc = t1.funcloc
+order by funcloc
 );
 
 
-create table floc_delta_simple_floc as 
+create or replace temporary view vw_floc_delta_simple_floc as 
 select 
     1 as "Batch Number",
     t.funcloc as "Functional Location",
@@ -329,17 +361,11 @@ select
 from vw_new_flocs t
 order by t.funcloc;
 
-select * from floc_delta_simple_floc;
-
-
-
--- Set the variable `dest_xlsx` before running this file
-select getvariable('dest_xlsx') as dest_xlsx;
-
 
 -- Don't fix the output table name...
 copy (
-    select * from floc_delta_simple_floc order by "Functional Location"
-) to (getvariable('dest_xlsx')) (format xlsx, header true, sheet 'NewFloc');
+    select * from vw_floc_delta_simple_floc order by "Functional Location"
+) to (getvariable('dest_simple_floc_xlsx')) (format xlsx, header true, sheet 'NewFloc');
 
-select 'Wrote: ' || getvariable('dest_xlsx') as result;
+select 'Wrote: ' || getvariable('dest_simple_floc_xlsx') as result;
+
