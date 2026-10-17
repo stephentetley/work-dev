@@ -7,7 +7,7 @@
 
 -- Preliminaries: 
 -- The variables `source_ih06_xlsx` and `dest_minimal_floc_parquet` are set in 
--- DuckDb (i.e. not env vars)
+-- DuckDB (i.e. not env vars)
 --
 
 .bail on
