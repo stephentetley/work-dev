@@ -13,10 +13,24 @@
 .bail on
 load excel;
 
+with cte1_variables as (
+select 
+    ifnull(getvariable('source_xlsx'), error('Must set variable "source_xlsx"')) as source_xlsx,
+    ifnull(getvariable('dest_dir'), error('Must set variable "dest_dir"')) as dest_dir,
+)
+unpivot cte1_variables
+on columns(*)
+into name variable value value;
+
+
+create or replace temporary macro nulled(str varchar) as 
+    if(str == '' or upper(str) == 'NULL', null, str);
+
+
 create or replace temporary table table1 as
 with cte1_raw as (
     select 
-        trim(columns(t.*)),
+        nulled(trim(columns(t.*))),
     from read_xlsx(
             getvariable('source_xlsx'), 
             all_varchar=true) as t
