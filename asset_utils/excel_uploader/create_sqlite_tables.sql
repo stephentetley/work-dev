@@ -16,10 +16,27 @@
 
 
 -- Preliminaries: 
--- Must have a SQLite database attached called `sqlite_db`
+-- Must have a SQLite write enabled database attached called `sqlite_db`
 -- This script is run from DuckDB - i.e. it relies on the SQLite extension 
 -- (which must be already loaded). There is no necessity for a 
 -- standalone SQLite to be installed 
+
+
+-- e.g. 
+-- load sqlite;
+-- > attach 'myfile1.sqlite' as sqlite_db (type sqlite);
+
+.bail on
+
+with cte1_databases as (
+select 
+    if(exists (from duckdb_databases() where database_name = 'sqlite_db'), 
+        true, 
+        error('Must attach database "sqlite_db"')) as sqlite_db,
+)
+unpivot cte1_databases
+on columns(*)
+into name database value loaded;
 
 
 -- Floc Create tables

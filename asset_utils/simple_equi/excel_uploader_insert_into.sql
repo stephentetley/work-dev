@@ -1,24 +1,45 @@
--- 
+--
 -- Copyright 2026 Stephen Tetley
 -- 
--- Licensed under the Apache License, Version 2.0 (the "License");
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
--- 
--- http://www.apache.org/licenses/LICENSE-2.0
--- 
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
--- 
+-- Use of this source code is governed by the Apache 2.0 license
+-- that can be found in the LICENSE file.
+--
 
 
--- Preliminary: 
--- Must have a sqlite database attached called `sqlite_db`
--- Run from DuckDB - no guarantee SQLite is installed 
+-- Preliminaries: 
+-- Must have a sqlite database attached called `sqlite_db` (read-write)
+-- and `asset_facts` and `asset_lib` DuckDB catalogs attached as read only
+-- The variables `simple_equi_parquet` is set in DuckDB 
+-- (i.e. not an env var)
+--
+-- Run from DuckDB - no need for standalone SQLite is installed 
+-- 
 
+.bail on
+
+with cte1_variables as (
+select 
+    ifnull(getvariable('simple_equi_parquet'), error('Must set variable "simple_equi_parquet"')) as simple_equi_parquet,
+)
+unpivot cte1_variables
+on columns(*)
+into name variable value value;
+
+with cte1_databases as (
+select 
+    if(exists (from duckdb_databases() where database_name = 'sqlite_db'), 
+        true, 
+        error('Must attach database "sqlite_db"')) as sqlite_db,
+    if(exists (from duckdb_databases() where database_name = 'asset_facts'), 
+        true, 
+        error('Must attach database "asset_facts"')) as asset_facts,
+    if(exists (from duckdb_databases() where database_name = 'asset_lib'), 
+        true, 
+        error('Must attach database "asset_lib"')) as asset_lib,
+)
+unpivot cte1_databases
+on columns(*)
+into name database value loaded;
 
 
 insert into sqlite_db.equi_create_equipment_data by name
@@ -45,9 +66,8 @@ select
     'ZEQUIPST' as status_profile,
     t.user_status as status_of_an_object,
     t.user_status as status_without_stsno,
-from simple_equi.worklist t
--- TODO uses `asset_facts_catalog`
-left join simple_equi.catalog_profile t1 on t1.cat_prof = t.equi_class;
+from read_parquet(getvariable('simple_equi_parquet')) t
+left join asset_facts.catalog_profile t1 on t1.cat_prof = t.equi_class;
 
     
 
@@ -59,7 +79,7 @@ select
     'SOLUTION_ID' as class,
     'SOLUTION_ID' as characteristics,
     t.solution_id as char_value,
-from simple_equi.worklist t
+from read_parquet(getvariable('simple_equi_parquet')) t
 where t.solution_id is not null;
 
 -- LOCATION_ON_SITE
@@ -70,7 +90,7 @@ select
     t.equi_class as class,
     'LOCATION_ON_SITE' as characteristics,
     t.location_on_site as char_value,
-from simple_equi.worklist t;
+from read_parquet(getvariable('simple_equi_parquet')) t;
 
 -- EASTING
 insert into sqlite_db.equi_create_classification by name
@@ -81,8 +101,8 @@ select
     'EASTING' as characteristics,
     if(t.easting is not null, 
         format('{:d}', t.easting), 
-        format('{:d}', get_east_north_struct(t.grid_ref).easting)) as char_value
-from simple_equi.worklist t
+        format('{:d}', asset_lib.get_east_north(t.grid_ref).easting)) as char_value
+from read_parquet(getvariable('simple_equi_parquet')) t
 where t.easting is not null or t.grid_ref is not null;
 
 
@@ -95,8 +115,8 @@ select
     'NORTHING' as characteristics,
     if(t.northing is not null, 
         format('{:d}', t.northing), 
-        format('{:d}', get_east_north_struct(t.grid_ref).northing)) as char_value
-from simple_equi.worklist t
+        format('{:d}', asset_lib.get_east_north(t.grid_ref).northing)) as char_value
+from read_parquet(getvariable('simple_equi_parquet')) t
 where t.northing is not null or t.grid_ref is not null;
 
 
@@ -108,7 +128,7 @@ select
     'AIB_REFERENCE' as class,
     'AI2_AIB_REFERENCE' as characteristics,
     t.ai2_pli_number as char_value,
-from simple_equi.worklist t
+from read_parquet(getvariable('simple_equi_parquet')) t
 where t.ai2_pli_number is not null;
 
 -- AI2_AIB_REFERENCE (sai)
@@ -119,7 +139,7 @@ select
     'AIB_REFERENCE' as class,
     'AI2_AIB_REFERENCE' as characteristics,
     t.ai2_sai_number as char_value,
-from simple_equi.worklist t
+from read_parquet(getvariable('simple_equi_parquet')) t
 where t.ai2_sai_number is not null;
 
 -- CONDITION_GRADE
@@ -130,7 +150,7 @@ select
     'ASSET_CONDITION' as class,
     'CONDITION_GRADE' as characteristics,
     t.condition_grade as char_value,
-from simple_equi.worklist t
+from read_parquet(getvariable('simple_equi_parquet')) t
 where t.condition_grade is not null;
 
 -- CONDITION_GRADE_REASON
@@ -141,7 +161,7 @@ select
     'ASSET_CONDITION' as class,
     'CONDITION_GRADE_REASON' as characteristics,
     t.condition_grade_reason as char_value,
-from simple_equi.worklist t
+from read_parquet(getvariable('simple_equi_parquet')) t
 where t.condition_grade_reason is not null;
 
 -- SURVEY_YEAR
@@ -152,5 +172,7 @@ select
     'ASSET_CONDITION' as class,
     'SURVEY_DATE' as characteristics,
     format('{:4d}', t.survey_year) as char_value,
-from simple_equi.worklist t
+from read_parquet(getvariable('simple_equi_parquet')) t
 where t.survey_year is not null;
+
+-- detach `` when done
