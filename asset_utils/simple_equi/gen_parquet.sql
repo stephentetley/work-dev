@@ -6,7 +6,7 @@
 --
 
 -- Preliminaries: 
--- The variables `simple_equi_xlsx` and `dest_parquet` are set in 
+-- The variables `simple_equi_xlsx` and `dest_simple_equi_parquet` are set in 
 -- DuckDb (i.e. not env vars)
 --
 
@@ -16,7 +16,7 @@ load excel;
 with cte1_variables as (
 select 
     ifnull(getvariable('simple_equi_xlsx'), error('Must set variable "simple_equi_xlsx"')) as simple_equi_xlsx,
-    ifnull(getvariable('dest_parquet'), error('Must set variable "dest_parquet"')) as dest_parquet,
+    ifnull(getvariable('dest_simple_equi_parquet'), error('Must set variable "dest_simple_equi_parquet"')) as dest_simple_equi_parquet,
 )
 unpivot cte1_variables
 on columns(*)
@@ -26,14 +26,6 @@ into name variable value value;
 create or replace temporary macro nulled(str varchar) as 
     if(str == '' or upper(str) == 'NULL', null, str);
 
-create or replace table table1 as
-select 
-    *
-from read_xlsx(
-    getvariable('simple_equi_xlsx'),
-    all_varchar=true, 
-    sheet='NewEqui'
-) as t;
 
 create or replace temporary table table1 as
 with cte1_raw as (
@@ -77,11 +69,10 @@ from cte1_raw t
 where t."Temp ID" is not null and t."Equi Name" is not null;
 
 
-
-
 -- Don't fix the output table name, user defined...
 copy (
-    select * from table1 order by batch_number, functional_location
-) to (getvariable('dest_parquet')) (format parquet, compression snappy);
+    select * from table1 order by batch_number, functional_location, temp_id
+) to (getvariable('dest_simple_equi_parquet')) (format parquet, compression snappy);
 
-select 'Wrote: ' || getvariable('dest_parquet') as result;
+select 'Wrote: ' || getvariable('dest_simple_equi_parquet') as result;
+
