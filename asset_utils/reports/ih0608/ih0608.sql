@@ -6,17 +6,31 @@
 --
 
 -- Preliminaries: 
--- The variables `floc_source_parquet`, `equi_source_parquet' and `dest_xlsx` 
--- ase set in DuckDb (i.e. not env vars)
+-- The variables `floc_minimal_source_parquet`, `equi_minimal_source_parquet' and `dest_report_xlsx` 
+-- are set in DuckDB (i.e. not env vars)
 --
 
+.bail on
 load excel;
 
+with cte1_variables as (
+select 
+    ifnull(getvariable('floc_minimal_source_parquet'), error('Must set variable "floc_minimal_source_parquet"')) as floc_minimal_source_parquet,
+    ifnull(getvariable('equi_minimal_source_parquet'), error('Must set variable "equi_minimal_source_parquet"')) as equi_minimal_source_parquet,
+    ifnull(getvariable('dest_report_xlsx'), error('Must set variable "dest_report_xlsx"')) as dest_report_xlsx,
+)
+unpivot cte1_variables
+on columns(*)
+into name variable value value;
+
+
+
+
 create or replace temporary view vw_source_floc as
-select * from read_parquet(getvariable('floc_source_parquet'));
+select * from read_parquet(getvariable('floc_minimal_source_parquet'));
 
 create or replace temporary view vw_source_equi as
-select * from read_parquet(getvariable('equi_source_parquet'));
+select * from read_parquet(getvariable('equi_minimal_source_parquet'));
 
 create or replace temporary macro pp_position (pos integer) as
 format('{:04d}', coalesce(pos, 9990));
@@ -135,7 +149,7 @@ order by "Sort Key";
 
 copy (
     select * from vw_site_report order by "Sort Key"
-) to (getvariable('dest_xlsx')) (format xlsx, header true);
+) to (getvariable('dest_report_xlsx')) (format xlsx, header true);
 
-select 'Wrote: ' || getvariable('dest_xlsx') as result;
+select 'Wrote: ' || getvariable('dest_report_xlsx') as result;
 
