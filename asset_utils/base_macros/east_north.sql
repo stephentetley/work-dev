@@ -6,11 +6,11 @@
 --
 
 -- Preliminaries: 
--- The schema `asset_lib" as been created.
+-- The schema `base_macros" exists.
 --
 
 
-create or replace macro asset_lib.get_east_north(gridref varchar) as (
+create or replace macro base_macros.get_east_north(gridref varchar) as (
 with cte_major as (
     select * from
         (values

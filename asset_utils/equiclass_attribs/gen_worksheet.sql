@@ -78,6 +78,7 @@ using first(char_name);
 
 create or replace temporary view vw_classequi_attribute_values as
 select 
+    t.batch_number as "Batch Number",
     t.temp_id as "Equipment", 
     t.equi_name as "Description of technical object",
     t.functional_location as "Functional Location",

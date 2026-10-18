@@ -18,16 +18,8 @@
 .bail on
 load excel;
 
-with cte1_variables as (
-select 
-    ifnull(getvariable('source_txt'), error('Must set variable "source_txt"')) as source_txt,
-    ifnull(getvariable('dest_dir'), error('Must set variable "dest_dir"')) as dest_dir,
-)
-unpivot cte1_variables
-on columns(*)
-into name variable value value;
-
-
+from base_macros.assert_variables_are_set(['source_txt', 'dest_dir']);
+from base_macros.assert_variables_are_distinct(['source_txt', 'dest_dir']);
 
 create or replace temporary macro nulled(str varchar) as 
     if(str == '' or upper(str) == 'NULL', null, str);
