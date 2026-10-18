@@ -6,6 +6,7 @@
 --
 
 -- Preliminaries: 
+-- `base_macros_catalog` is attached as `base_macros` (read_only)
 -- The variables `ata_source_xlsx`, `attr_sets_source_xlsx' and `dest_dir` are set in 
 -- DuckDb (i.e. not env vars)
 --
@@ -13,15 +14,10 @@
 .bail on
 load excel;
 
-with cte1_variables as (
-select 
-    ifnull(getvariable('ata_source_xlsx'), error('Must set variable "ata_source_xlsx"')) as ata_source_xlsx,
-    ifnull(getvariable('attr_sets_source_xlsx'), error('Must set variable "attr_sets_source_xlsx"')) as attr_sets_source_xlsx,
-    ifnull(getvariable('dest_dir'), error('Must set variable "dest_dir"')) as dest_dir,
-)
-unpivot cte1_variables
-on columns(*)
-into name variable value value;
+set variable inputs = ['ata_source_xlsx', 'attr_sets_source_xlsx', 'dest_dir'];
+from base_macros.assert_variables_are_set(getvariable('inputs'));
+from base_macros.assert_variables_are_distinct(getvariable('inputs'));
+
 
 
 
@@ -40,8 +36,6 @@ case
     else 'varchar'
 end;
 
-create or replace temporary macro nulled(str varchar) as 
-    if(str == '' or upper(str) == 'NULL', null, str);
 
 
 create or replace temporary macro get_table_name(name varchar) as (
@@ -55,7 +49,7 @@ create or replace temporary macro get_table_name(name varchar) as (
 create or replace temporary table asset_types_attributes as
 with cte1_raw as (
     select 
-        nulled(trim(columns(t.*))),
+        base_macros.nulled(trim(columns(t.*))),
     from read_xlsx(
             getvariable('ata_source_xlsx'), 
             sheet='AssetTypesAttributes',
@@ -84,7 +78,7 @@ from cte2_filtered t;
 create or replace temporary table equi_attribute_sets as
 with cte1_raw as (
     select 
-        nulled(trim(columns(t.*))),
+        base_macros.nulled(trim(columns(t.*))),
     from read_xlsx(
         getvariable('attr_sets_source_xlsx'), 
         all_varchar=true, 

@@ -7,6 +7,7 @@
 
 
 -- Preliminaries: 
+-- `base_macros_catalog` is attached as `base_macros` (read_only)
 -- `asset_facts_catalog` is attached as `asset_facts` (read_only)
 -- `asset_lib_catalog` is attached as `asset_lib` (read_only)
 -- The variable `floc_delta_worklist_xlsx` is set in DuckDb (i.e. not an env var)
@@ -16,20 +17,10 @@
 .bail on
 load excel;
 
-with cte1_variables as (
-select 
-    ifnull(getvariable('floc_delta_worklist_xlsx'), error('Must set variable "floc_delta_worklist_xlsx"')) as floc_delta_worklist_xlsx,
-    ifnull(getvariable('existing_flocs_parquet'), error('Must set variable "existing_flocs_parquet"')) as existing_flocs_parquet,
-    ifnull(getvariable('dest_simple_floc_xlsx'), error('Must set variable "dest_simple_floc_xlsx"')) as dest_simple_floc_xlsx,
-)
-unpivot cte1_variables
-on columns(*)
-into name variable value value;
+set variable inputs = ['floc_delta_worklist_xlsx', 'existing_flocs_parquet', 'dest_simple_floc_xlsx'];
+from base_macros.assert_variables_are_set(getvariable('inputs'));
+from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
-
-
-create or replace temporary macro nulled(str varchar) as 
-    if(str == '' or upper(str) == 'null', null, str);
 
 with cte1_databases as (
 select 

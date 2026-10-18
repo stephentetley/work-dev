@@ -23,14 +23,12 @@ on columns(*)
 into name variable value value;
 
 
-create or replace temporary macro nulled(str varchar) as 
-    if(str == '' or upper(str) == 'NULL', null, str);
 
 
 create or replace temporary table table1 as
 with cte1_raw as (
     select 
-        nulled(trim(columns(t.*))),
+        base_macros.nulled(trim(columns(t.*))),
     from read_xlsx(
         getvariable('simple_equi_xlsx'),
         all_varchar=true, 

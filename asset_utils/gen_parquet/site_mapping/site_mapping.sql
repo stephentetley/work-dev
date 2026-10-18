@@ -6,6 +6,7 @@
 --
 
 -- Preliminaries: 
+-- `base_macros_catalog` is attached as `base_macros` (read_only)
 -- The variables `source_xlsx` and `dest_dir` are set in 
 -- DuckDb (i.e. not env vars)
 --
@@ -13,14 +14,10 @@
 .bail on
 load excel;
 
-with cte1_variables as (
-select 
-    ifnull(getvariable('source_xlsx'), error('Must set variable "source_xlsx"')) as source_xlsx,
-    ifnull(getvariable('dest_dir'), error('Must set variable "dest_dir"')) as dest_dir,
-)
-unpivot cte1_variables
-on columns(*)
-into name variable value value;
+set variable inputs = ['source_xlsx', 'dest_dir'];
+from base_macros.assert_variables_are_set(getvariable('inputs'));
+from base_macros.assert_variables_are_distinct(getvariable('inputs'));
+
 
 
 create or replace temporary table table1 as

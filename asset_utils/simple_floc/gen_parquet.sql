@@ -15,24 +15,18 @@
 .bail on
 load excel;
 
-with cte1_variables as (
-select 
-    ifnull(getvariable('simple_floc_xlsx'), error('Must set variable "simple_floc_xlsx"')) as simple_floc_xlsx,
-    ifnull(getvariable('dest_simple_floc_parquet'), error('Must set variable "dest_simple_floc_parquet"')) as dest_simple_floc_parquet,
-)
-unpivot cte1_variables
-on columns(*)
-into name variable value value;
+set variable inputs = ['simple_floc_xlsx', 'dest_simple_floc_parquet'];
+from base_macros.assert_variables_are_set(getvariable('inputs'));
+from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
 
-create or replace temporary macro nulled(str varchar) as 
-    if(str == '' or upper(str) == 'NULL', null, str);
+
 
 
 create or replace temporary table table1 as
 with cte1_raw as (
     select 
-        nulled(trim(columns(t.*))),
+        base_macros.nulled(trim(columns(t.*))),
     from read_xlsx(
         getvariable('simple_floc_xlsx'),
         all_varchar=true, 

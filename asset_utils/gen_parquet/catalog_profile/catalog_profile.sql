@@ -10,6 +10,7 @@
 
 
 -- Preliminaries: 
+-- `base_macros_catalog` is attached as `base_macros` (read_only)
 -- The variables `source_txt` and `dest_dir` are set in 
 -- DuckDb (i.e. not env vars)
 --
@@ -18,12 +19,9 @@
 .bail on
 load excel;
 
-from base_macros.assert_variables_are_set(['source_txt', 'dest_dir']);
-from base_macros.assert_variables_are_distinct(['source_txt', 'dest_dir']);
-
-create or replace temporary macro nulled(str varchar) as 
-    if(str == '' or upper(str) == 'NULL', null, str);
-
+set variable inputs = ['source_txt', 'dest_dir'];
+from base_macros.assert_variables_are_set(getvariable('inputs'));
+from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
 create or replace temporary macro starts_with_time(str varchar) as
     regexp_matches(str, '^\s+\d{1,2}:\d{2}:\d{2}');
@@ -36,8 +34,8 @@ create or replace temporary macro get_cat_prof(str varchar) as
     case starts_with_time(str)
         when true then null
         else coalesce(
-                regexp_extract(str, '^\s+(\S+)\s+', 1).nulled(),
-                regexp_extract(str, '^\p{L}{3} \p{L}{3} \d{1,2}(\S+)$', 1).nulled()
+                base_macros.nulled(regexp_extract(str, '^\s+(\S+)\s+', 1)),
+                base_macros.nulled(regexp_extract(str, '^\p{L}{3} \p{L}{3} \d{1,2}(\S+)$', 1))
             )
     end;
 
@@ -45,8 +43,8 @@ create or replace temporary macro get_description(str varchar) as
     case starts_with_date(str)
         when true then null
         else coalesce(
-                regexp_extract(str, '^\s+\d{1,2}:\d{2}:\d{2} \d{4}(.+)\s+\d+/\d+$', 1).trim().nulled(),
-                regexp_extract(str, '^\s+\S+\s+(.+)', 1).nulled()
+                base_macros.nulled(regexp_extract(str, '^\s+\d{1,2}:\d{2}:\d{2} \d{4}(.+)\s+\d+/\d+$', 1).trim()),
+                base_macros.nulled(regexp_extract(str, '^\s+\S+\s+(.+)', 1))
             )
     end;
 

@@ -6,6 +6,7 @@
 --
 
 -- Preliminaries: 
+-- `base_macros_catalog` is attached as `base_macros` (read_only)
 -- The variables `source_ih08_xlsx` and `dest_minimal_equi_parquet` are set in 
 -- DuckDb (i.e. not env vars)
 --
@@ -13,23 +14,16 @@
 .bail on
 load excel;
 
-with cte1_variables as (
-select 
-    ifnull(getvariable('source_ih08_xlsx'), error('Must set variable "source_ih08_xlsx"')) as source_ih08_xlsx,
-    ifnull(getvariable('dest_minimal_equi_parquet'), error('Must set variable "dest_minimal_equi_parquet"')) as dest_minimal_equi_parquet,
-)
-unpivot cte1_variables
-on columns(*)
-into name variable value value;
+set variable inputs = ['source_ih08_xlsx', 'dest_minimal_equi_parquet'];
+from base_macros.assert_variables_are_set(getvariable('inputs'));
+from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
 
-create or replace temporary macro nulled(str varchar) as 
-    if(str == '' or upper(str) == 'NULL', null, str);
 
 create or replace temporary table table1 as
 with cte1_raw as (
     select 
-        nulled(trim(columns(t.*))),
+        base_macros.nulled(trim(columns(t.*))),
     from read_xlsx(
             getvariable('source_ih08_xlsx'), 
             sheet='Sheet1',

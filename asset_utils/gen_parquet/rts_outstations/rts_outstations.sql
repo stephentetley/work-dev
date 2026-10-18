@@ -6,28 +6,23 @@
 --
 
 -- Preliminaries: 
+-- `base_macros_catalog` is attached as `base_macros` (read_only)
 -- The variables `source_tsv` and `dest_path` are set in 
 -- DuckDb (i.e. not env vars)
 --
 
 .bail on
 
-with cte1_variables as (
-select 
-    ifnull(getvariable('source_tsv'), error('Must set variable "source_tsv"')) as source_tsv,
-    ifnull(getvariable('dest_path'), error('Must set variable "dest_path"')) as dest_path,
-)
-unpivot cte1_variables
-on columns(*)
-into name variable value value;
+set variable inputs = ['source_tsv', 'dest_path'];
+from base_macros.assert_variables_are_set(getvariable('inputs'));
+from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
-create or replace temporary macro nulled(str varchar) as 
-    if(str == '' or upper(str) == 'NULL', null, str);
+
 
 create or replace temporary table table1 as
 with cte1_raw as (
     select 
-        nulled(trim(columns(t.*))),
+        base_macros.nulled(trim(columns(t.*))),
     from read_csv(
         getvariable('source_tsv'),
         delim = '\t',

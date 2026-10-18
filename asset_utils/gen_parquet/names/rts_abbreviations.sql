@@ -10,6 +10,7 @@
 
 
 -- Preliminaries: 
+-- `base_macros_catalog` is attached as `base_macros` (read_only)
 -- The variables `source_txt` and `dest_dir` are set in 
 -- DuckDb (i.e. not env vars)
 --
@@ -21,17 +22,10 @@
 .bail on
 load excel;
 
-with cte1_variables as (
-select 
-    ifnull(getvariable('source_txt'), error('Must set variable "source_txt"')) as source_txt,
-    ifnull(getvariable('dest_dir'), error('Must set variable "dest_dir"')) as dest_dir,
-)
-unpivot cte1_variables
-on columns(*)
-into name variable value value;
+set variable inputs = ['source_txt', 'dest_dir'];
+from base_macros.assert_variables_are_set(getvariable('inputs'));
+from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
-create or replace temporary macro nulled(str varchar) as 
-    if(str == '' or upper(str) == 'NULL', null, str);
 
 -- Copied text from Okular may have 2 or 3 tabs (2 if column 3 is blank)
 -- This cause a parse error for the csv parser
