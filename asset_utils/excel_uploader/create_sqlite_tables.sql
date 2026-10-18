@@ -119,6 +119,52 @@ create or replace table sqlite_db.floc_create_functional_location (
     sales_group varchar
 );
 
+-- includes `batch_number` which is not printed in the Excel file
+create or replace table sqlite_db.floc_create_address_maintenance (
+    batch_number integer not null,
+    functional_location varchar not null,
+    title varchar,
+    name1 varchar,
+    name2 varchar,
+    name3 varchar,
+    name4 varchar,
+    search_term1 varchar,
+    search_term2 varchar,
+    c_o_name varchar,
+    building varchar,
+    floor varchar,
+    room varchar,
+    house_no varchar,
+    street varchar,
+    supplement varchar,
+    street2 varchar,
+    street3 varchar,
+    street4 varchar,
+    street5 varchar,
+    district varchar,
+    postal_code varchar,
+    city varchar,
+    other_city varchar,
+    country varchar,
+    region varchar,
+    time_zone varchar,
+    tax_jurisdiction varchar,
+    transportation_zone varchar,
+    stradr_undeliverable varchar,
+    structure_group varchar,
+    po_box varchar,
+    po_box_w_o_no varchar,
+    dlvry_serv_dlvry_no varchar,
+    number_of_delivery_service varchar,
+    pb_box_postal_code varchar,
+    po_box_other_city varchar,
+    po_box_lobby varchar,
+    po_box_other_country varchar,
+    po_box_undeliverable varchar,
+    po_box_other_region varchar,
+    company_postal_code varchar,
+    comments varchar
+);
 
 -- includes `batch_number` which is not printed in the Excel file
 create or replace table sqlite_db.floc_create_classification (
