@@ -59,15 +59,15 @@ with cte1_raw as (
         t.equi_id,
         t.class_name,
         t1.attr_name as characteristics,
-        t.attr_value as char_value
+        t.attr_value as char_value,
     from cte3_classified t
     join cte3_classified t1 
         on t1.equi_id = t.equi_id
         and t1.index = t.index
         and t1.row_type = 'attr'
-    where t.attr_value is not null
+    where t.attr_value is not null and t.attr_value != ''
 )
-select * from cte4_columns_filled_out;  
+select * from cte4_columns_filled_out;
 
 
 

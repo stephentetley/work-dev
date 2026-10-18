@@ -16,26 +16,13 @@
 
 .bail on
 
-with cte1_variables as (
-select 
-    ifnull(getvariable('source_equiclass_attribs_parquet'), error('Must set variable "source_equiclass_attribs_parquet"')) as simple_equi_parquet,
-)
-unpivot cte1_variables
-on columns(*)
-into name variable value value;
+set variable inputs = ['source_equiclass_attribs_parquet'];
+from base_macros.assert_variables_are_set(getvariable('inputs'));
+from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
-with cte1_databases as (
-select 
-    if(exists (from duckdb_databases() where database_name = 'sqlite_db'), 
-        true, 
-        error('Must attach database "sqlite_db"')) as sqlite_db,
-)
-unpivot cte1_databases
-on columns(*)
-into name database value loaded;
+from base_macros.assert_databases_are_loaded(['base_macros', 'sqlite_db']);
 
 
--- TODO must add batch_number to gen_parquet/gen_worksheet
 insert into sqlite_db.equi_create_classification by name
 select
     t.batch_number,
