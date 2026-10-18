@@ -18,7 +18,7 @@ set variable inputs = ['ata_source_xlsx', 'attr_sets_source_xlsx', 'dest_dir'];
 from base_macros.assert_variables_are_set(getvariable('inputs'));
 from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
-
+from base_macros.assert_databases_are_loaded(['base_macros']);
 
 
 create or replace temporary macro decode_data_type(dtype varchar) as 

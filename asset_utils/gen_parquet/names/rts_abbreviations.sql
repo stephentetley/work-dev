@@ -26,6 +26,7 @@ set variable inputs = ['source_txt', 'dest_dir'];
 from base_macros.assert_variables_are_set(getvariable('inputs'));
 from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
+from base_macros.assert_databases_are_loaded(['base_macros']);
 
 -- Copied text from Okular may have 2 or 3 tabs (2 if column 3 is blank)
 -- This cause a parse error for the csv parser
@@ -46,9 +47,9 @@ with cte1_raw as (
 ), cte4_filtered as (
     select
         row_ix,
-        trim(arr[1]).nulled() as description,
-        trim(arr[2]).nulled() as medium,
-        if(length(arr) == 3, trim(arr[3]).nulled(), null) as short,
+        base_macros.nulled(trim(arr[1])) as description,
+        base_macros.nulled(trim(arr[2])) as medium,
+        if(length(arr) == 3, base_macros.nulled(trim(arr[3])), null) as short,
     from cte3_numbered_lines t
     where length(arr) >= 2
 )

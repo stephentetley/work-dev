@@ -18,6 +18,7 @@ set variable inputs = ['floc_minimal_source_parquet', 'equi_minimal_source_parqu
 from base_macros.assert_variables_are_set(getvariable('inputs'));
 from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
+from base_macros.assert_databases_are_loaded(['base_macros']);
 
 
 create or replace temporary view vw_source_floc as

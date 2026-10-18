@@ -23,6 +23,9 @@ set variable inputs = ['source_txt', 'dest_dir'];
 from base_macros.assert_variables_are_set(getvariable('inputs'));
 from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
+from base_macros.assert_databases_are_loaded(['base_macros']);
+
+
 create or replace temporary macro starts_with_time(str varchar) as
     regexp_matches(str, '^\s+\d{1,2}:\d{2}:\d{2}');
 

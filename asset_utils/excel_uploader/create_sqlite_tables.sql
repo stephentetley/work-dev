@@ -28,15 +28,9 @@
 
 .bail on
 
-with cte1_databases as (
-select 
-    if(exists (from duckdb_databases() where database_name = 'sqlite_db'), 
-        true, 
-        error('Must attach database "sqlite_db"')) as sqlite_db,
-)
-unpivot cte1_databases
-on columns(*)
-into name database value loaded;
+from base_macros.assert_databases_are_loaded(['base_macros', 'sqlite_db']);
+
+
 
 
 -- Floc Create tables

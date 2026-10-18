@@ -21,20 +21,7 @@ set variable inputs = ['floc_delta_worklist_xlsx', 'existing_flocs_parquet', 'de
 from base_macros.assert_variables_are_set(getvariable('inputs'));
 from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
-
-with cte1_databases as (
-select 
-    if(exists (from duckdb_databases() where database_name = 'asset_facts'), 
-        true, 
-        error('Must attach database "asset_facts"')) as asset_facts,
-    if(exists (from duckdb_databases() where database_name = 'asset_lib'), 
-        true, 
-        error('Must attach database "asset_lib"')) as asset_lib,
-)
-unpivot cte1_databases
-on columns(*)
-into name database value loaded;
-
+from base_macros.assert_databases_are_loaded(['base_macros', 'asset_facts'. 'asset_lib']);
 
 --
 create or replace temporary table worklist(

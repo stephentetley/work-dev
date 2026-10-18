@@ -17,29 +17,11 @@
 
 .bail on
 
-with cte1_variables as (
-select 
-    ifnull(getvariable('simple_floc_parquet'), error('Must set variable "simple_floc_parquet"')) as simple_floc_parquet,
-)
-unpivot cte1_variables
-on columns(*)
-into name variable value value;
+set variable inputs = ['simple_floc_parquet'];
+from base_macros.assert_variables_are_set(getvariable('inputs'));
+from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
-with cte1_databases as (
-select 
-    if(exists (from duckdb_databases() where database_name = 'sqlite_db'), 
-        true, 
-        error('Must attach database "sqlite_db"')) as sqlite_db,
-    if(exists (from duckdb_databases() where database_name = 'asset_facts'), 
-        true, 
-        error('Must attach database "asset_facts"')) as asset_facts,
-    if(exists (from duckdb_databases() where database_name = 'asset_lib'), 
-        true, 
-        error('Must attach database "asset_lib"')) as asset_lib,
-)
-unpivot cte1_databases
-on columns(*)
-into name database value loaded;
+from base_macros.assert_databases_are_loaded(['base_macros', 'asset_facts'. 'asset_lib', 'sqlite_db']);
 
 
 

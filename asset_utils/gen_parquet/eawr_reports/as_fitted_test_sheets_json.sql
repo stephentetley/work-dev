@@ -22,7 +22,7 @@ set variable inputs = ['source_json_dir', 'dest_path'];
 from base_macros.assert_variables_are_set(getvariable('inputs'));
 from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
-
+from base_macros.assert_databases_are_loaded(['base_macros']);
 
 create or replace temporary macro norm_text(str varchar) as
     base_macros.nulled(trim(str).regexp_replace('\s+', ' ', 'g'));
