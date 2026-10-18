@@ -13,16 +13,10 @@
 .bail on
 load excel;
 
-with cte1_variables as (
-select 
-    ifnull(getvariable('floc_minimal_source_parquet'), error('Must set variable "floc_minimal_source_parquet"')) as floc_minimal_source_parquet,
-    ifnull(getvariable('equi_minimal_source_parquet'), error('Must set variable "equi_minimal_source_parquet"')) as equi_minimal_source_parquet,
-    ifnull(getvariable('dest_report_xlsx'), error('Must set variable "dest_report_xlsx"')) as dest_report_xlsx,
-)
-unpivot cte1_variables
-on columns(*)
-into name variable value value;
 
+set variable inputs = ['floc_minimal_source_parquet', 'equi_minimal_source_parquet', 'dest_report_xlsx'];
+from base_macros.assert_variables_are_set(getvariable('inputs'));
+from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
 
 

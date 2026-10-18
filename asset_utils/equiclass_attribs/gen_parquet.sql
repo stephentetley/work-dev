@@ -14,26 +14,20 @@
 .bail on
 load excel;
 
-with cte1_variables as (
-select 
-    ifnull(getvariable('source_equiclass_attribs_xlsx'), error('Must set variable "source_equiclass_attribs_xlsx"')) as source_equiclass_attribs_xlsx,
-    ifnull(getvariable('dest_equi_characterics_parquet'), error('Must set variable "dest_equi_characterics_parquet"')) as dest_equi_characterics_parquet,
-)
-unpivot cte1_variables
-on columns(*)
-into name variable value value;
+set variable inputs = ['source_equiclass_attribs_xlsx', 'dest_equi_characterics_parquet'];
+from base_macros.assert_variables_are_set(getvariable('inputs'));
+from base_macros.assert_variables_are_distinct(getvariable('inputs'));
+
+from base_macros.assert_databases_are_loaded(['base_macros', 'asset_facts', 'asset_lib']);
 
 
-
-create or replace temporary macro unnulled(str varchar) as
-if(str is null, '', str);
 
 
 -- Note - us unnnulled to get empty string - null is incompatible with unpivot
 create or replace temporary table table1 as
 with cte1_raw as (
     select 
-        unnulled(trim(columns(t.*))),
+        base_macros.unnulled(trim(columns(t.*))),
     from read_xlsx(
         getvariable('source_equiclass_attribs_xlsx'), 
         sheet = 'EquiAttribs', 

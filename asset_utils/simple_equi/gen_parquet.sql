@@ -6,22 +6,18 @@
 --
 
 -- Preliminaries: 
--- The variables `simple_equi_xlsx` and `dest_simple_equi_parquet` are set in 
+-- The variables `source_simple_equi_xlsx` and `dest_simple_equi_parquet` are set in 
 -- DuckDb (i.e. not env vars)
 --
 
 .bail on
 load excel;
 
-with cte1_variables as (
-select 
-    ifnull(getvariable('simple_equi_xlsx'), error('Must set variable "simple_equi_xlsx"')) as simple_equi_xlsx,
-    ifnull(getvariable('dest_simple_equi_parquet'), error('Must set variable "dest_simple_equi_parquet"')) as dest_simple_equi_parquet,
-)
-unpivot cte1_variables
-on columns(*)
-into name variable value value;
+set variable inputs = ['source_simple_equi_xlsx', 'dest_simple_equi_parquet'];
+from base_macros.assert_variables_are_set(getvariable('inputs'));
+from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
+from base_macros.assert_databases_are_loaded(['base_macros']);
 
 
 
@@ -30,7 +26,7 @@ with cte1_raw as (
     select 
         base_macros.nulled(trim(columns(t.*))),
     from read_xlsx(
-        getvariable('simple_equi_xlsx'),
+        getvariable('source_simple_equi_xlsx'),
         all_varchar=true, 
         sheet='NewEqui'
     ) as t

@@ -7,6 +7,7 @@
 
 
 -- Preliminaries: 
+-- `base_macros_catalog` is attached as `base_macros` (read_only)
 -- `asset_facts_catalog` is attached as `asset_facts` (read_only)
 -- `asset_lib_catalog` is attached as `asset_lib` (read_only)
 -- The variable `source_simple_equi_parquet` is set in DuckDb (i.e. not an env var)
@@ -19,28 +20,11 @@
 .bail on
 load excel;
 
-with cte1_variables as (
-select 
-    ifnull(getvariable('source_simple_equi_parquet'), error('Must set variable "source_simple_equi_parquet"')) as source_simple_equi_parquet,
-    ifnull(getvariable('dest_equiclass_attribs_xlsx'), error('Must set variable "dest_equiclass_attribs_xlsx"')) as dest_equiclass_attribs_xlsx,
-)
-unpivot cte1_variables
-on columns(*)
-into name variable value value;
+set variable inputs = ['source_simple_equi_parquet', 'dest_equiclass_attribs_xlsx'];
+from base_macros.assert_variables_are_set(getvariable('inputs'));
+from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
-
-with cte1_databases as (
-select 
-    if(exists (from duckdb_databases() where database_name = 'asset_facts'), 
-        true, 
-        error('Must attach database "asset_facts"')) as asset_facts,
-    if(exists (from duckdb_databases() where database_name = 'asset_lib'), 
-        true, 
-        error('Must attach database "asset_lib"')) as asset_lib,
-)
-unpivot cte1_databases
-on columns(*)
-into name database value loaded;
+from base_macros.assert_databases_are_loaded(['base_macros', 'asset_facts', 'asset_lib']);
 
 create or replace temporary view vw_simple_equi_source as
 select * from read_parquet(getvariable('source_simple_equi_parquet'));
