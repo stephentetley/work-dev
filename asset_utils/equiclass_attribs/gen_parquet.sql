@@ -40,6 +40,7 @@ with cte1_raw as (
         value cvalue
 ), cte3_classified as (
     select 
+        t."Batch Number" as batch_number,
         t."Equipment" as equi_id,
         t."Class" as class_name,
         case 
@@ -54,6 +55,7 @@ with cte1_raw as (
     where t.cvalue is not null
 ), cte4_columns_filled_out as (
     select 
+        t.batch_number,
         t.equi_id,
         t.class_name,
         t1.attr_name as characteristics,
