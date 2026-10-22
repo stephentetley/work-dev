@@ -1,5 +1,26 @@
--- asset_facts is attached
+--
+-- Copyright 2026 Stephen Tetley
+-- 
+-- Use of this source code is governed by the Apache 2.0 license
+-- that can be found in the LICENSE file.
+--
+
+-- Preliminaries: 
+-- `base_macros` and `asset_facts` are attached (read_only)
+-- The variables `equi_source_parquet` is set in  DuckDb (i.e. not env vars)
+--
+
 load fts;
+
+.bail on
+load excel;
+
+set variable inputs = ['equi_source_parquet'];
+from base_macros.assert_variables_are_set(getvariable('inputs'));
+from base_macros.assert_variables_are_distinct(getvariable('inputs'));
+
+from base_macros.assert_databases_are_loaded(['base_macros', 'asset_facts']);
+
 
 create or replace table equitype as
 select 
@@ -21,7 +42,7 @@ select
     t.tech_ident_num,
     t1.text_content as type_long_text,
     concat_ws(' ', t.equi_type, t.standard_class, t.equi_name, t.tech_ident_num).lower() as description_long_text,
-from read_parquet('minimal_equis.parquet') t
+from read_parquet($equi_source_parquet) t
 join equitype t1 on t1.class = t.standard_class;
 
 pragma create_fts_index(
@@ -45,6 +66,7 @@ select
 from cte1_raw_score;
 
 create or replace macro search_equidesc(anystr varchar) as table
+with cte1_all as (
 select
     fts_main_equipment.match_bm25(
         equi_id, 
@@ -53,8 +75,9 @@ select
         conjunctive := false) as score,
     equi_id,
 from equipment
+)
+select * from cte1_all
 where score is not null;
-
 
 -- TODO - work on a list
 create or replace macro exact_substring(sub varchar) as table
@@ -70,21 +93,18 @@ select
 from equipment
 where not contains(description_long_text, lower(sub));
 
-create or replace macro search_equipment(equidesc varchar, equitype varchar := null, keyword varchar := null) as table
+create or replace macro search_equipment(equidesc varchar, ty varchar := null, kywd varchar := null) as table
 with cte1_unions as (
     -- must be a union not a join
     select * from search_equidesc(equidesc) where score is not null
     union by name
-    select * from search_equitype(equitype) where score is not null
+    select * from search_equitype(ty) where score is not null
     union by name
-    select * from exact_substring(keyword) where score is not null
+    select * from exact_substring(kywd) where score is not null
 ), cte2_grouped as (
     select 
         product(score) as score,
         equi_id,
-        -- first(class) as class,
-        -- first(equi_name) as equi_name,
-        -- first(tech_ident_num) as tech_ident_num,
     from cte1_unions
     group by all
 ), cte3_add_columns as (
@@ -102,4 +122,3 @@ with cte1_unions as (
 select * from cte3_add_columns
 where score > 0.0
 order by score desc;
-
