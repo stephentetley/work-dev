@@ -19,6 +19,7 @@ from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
 from base_macros.assert_databases_are_loaded(['base_macros']);
 
+
 create or replace temporary table table1 as
 with cte1_raw as (
     select 
@@ -30,28 +31,47 @@ with cte1_raw as (
         all_varchar = true,
         filename = true
     ) t
-), cte2_refine_columns as (
-    select 
-        t.filename,
-        try_cast(t."No." as integer) as point_number,
-        t."Pt name" as point_name,
-        t."Ty" as point_ty,
-        t."D" as point_d,
-        t."Point comment" as point_comment,
-        t."Value" as point_value,
-        t."AC" as ac,
-        t."Al Rt" as al_rt,
-        t."Fa" as fa,
-        t."Scan" as scan,
-        t."Fn" as fn,
-        t."Record" as record,
-    from cte1_raw t
 )
-select * from cte2_refine_columns;
+select * from cte1_raw;
+
+-- Allow the export to miss some fields...
+alter table table1 add column if not exists "Updated         Method" varchar default null;
+alter table table1 add column if not exists "Alarm status" varchar default null;
+alter table table1 add column if not exists "Fail" varchar default null;
+alter table table1 add column if not exists "Fail" varchar default null;
+alter table table1 add column if not exists "Scan" varchar default null;
+alter table table1 add column if not exists "OD name" varchar default null;
+alter table table1 add column if not exists "OD comment" varchar default null;
+alter table table1 add column if not exists "Function" varchar default null;
+alter table table1 add column if not exists "Function comment" varchar default null;
+alter table table1 add column if not exists "Ctrl pic  Alarm pic" varchar default null;
+
+create or replace temporary view vw_table1 as
+select 
+    t.filename,
+    row_number() over () as row_ix,
+    regexp_extract(t."OS\Point name", '^(\S+)\s+\\(\S+)$', 1) as outstation,
+    regexp_extract(t."OS\Point name", '^(\S+)\s+\\(\S+)$', 2) as point_name,
+    regexp_extract(t."Der. Typ. No", '^(\S+)\s+(\S+)\s+(\d+)$', 1) as derivation,
+    regexp_extract(t."Der. Typ. No", '^(\S+)\s+(\S+)\s+(\d+)$', 2) as point_type,
+    try_cast(regexp_extract(t."Der. Typ. No", '^(\S+)\s+(\S+)\s+(\d+)$', 3) as integer) as point_number,
+    t."Value" as value,
+    try(strptime(regexp_extract(t."Updated         Method", '^(.+)\s+(\S+)$', 1), '%H:%M %d-%b-%y')) as updated,
+    regexp_extract(t."Updated         Method", '^(.+)\s+(\S+)$', 2) as method,
+    t."Alarm status" as alarm_status,
+    t."Fail" as fail,
+    t."Scan" as scan,
+    t."OD name" as od_name,
+    t."OD comment" as od_comment,
+    t."Function" as od_function,
+    t."Function comment" as od_function_comment,
+    regexp_extract(t."Ctrl pic  Alarm pic", '^(\S+)', 1) as control_pic,
+    regexp_extract(t."Ctrl pic  Alarm pic", '^(\S+)\s+(\S+)$', 2) as alarm_pic,
+from table1 t;
 
 -- Don't fix the output table name, expect multiple runs...
 copy (
-    select * from table1 order by filename, point_number
+    select * from vw_table1 order by filename, row_ix
 ) to (getvariable('dest_path')) (format parquet, compression snappy);
 
 select 'Wrote: ' || getvariable('dest_path') as result;

@@ -40,6 +40,7 @@ select
     t.standard_class as class,
     t.functional_location,
     t.tech_ident_num,
+    t.user_status,
     t1.text_content as type_long_text,
     concat_ws(' ', t.equi_type, t.standard_class, t.equi_name, t.tech_ident_num).lower() as description_long_text,
 from read_parquet($equi_source_parquet) t
@@ -93,14 +94,14 @@ select
 from equipment
 where not contains(description_long_text, lower(sub));
 
-create or replace macro search_equipment(equidesc varchar, ty varchar := null, kywd varchar := null) as table
+create or replace macro search_equipment(equidesc varchar, ty varchar := null, keyword varchar := null) as table
 with cte1_unions as (
     -- must be a union not a join
     select * from search_equidesc(equidesc) where score is not null
     union by name
     select * from search_equitype(ty) where score is not null
     union by name
-    select * from exact_substring(kywd) where score is not null
+    select * from exact_substring(keyword) where score is not null
 ), cte2_grouped as (
     select 
         product(score) as score,
@@ -115,6 +116,7 @@ with cte1_unions as (
         any_value(t1.class) as class,
         any_value(t1.functional_location) as functional_location,
         any_value(t1.tech_ident_num) as tech_ident_num,
+        any_value(t1.user_status) as status,
     from cte2_grouped as t
     join equipment t1 on t1.equi_id = t.equi_id
     group by t.equi_id,
