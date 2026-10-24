@@ -17,12 +17,33 @@ create or replace macro base_macros.unnulled(str varchar) as
 
 
 create or replace macro base_macros.assert_databases_are_loaded(names varchar[]) as table (
-    with cte1_unested as (
-        select unnest(names) as database_name
-    )
-    select 
-        t.database_name, 
-        if(t1.path is not null, true, error(format('The database "{}" is not loaded', t.database_name))) as loaded,
-     from cte1_unested t
-     left join duckdb_databases() t1 on t1.database_name = t.database_name
+with cte1_unested as (
+    select unnest(names) as database_name
+)
+select 
+    t.database_name, 
+    if(t1.path is not null, true, error(format('The database "{}" is not loaded', t.database_name))) as loaded,
+    from cte1_unested t
+    left join duckdb_databases() t1 on t1.database_name = t.database_name
 );
+
+create or replace macro base_macros.snake_case(str varchar) as (
+with cte1_common as (
+    select regexp_extract_all(str, '\S\p{Lu}') as tokens,
+), cte2_worker as (
+    select
+        list_reduce(tokens, lambda str, tk: replace(str, tk, tk[1] || '_' || tk[2]),  str) as answer
+    from cte1_common
+)
+select lower(answer) from cte2_worker);
+
+create or replace macro base_macros.kebab_case(str varchar) as (
+with cte1_common as (
+    select regexp_extract_all(str, '\S\p{Lu}') as tokens,
+), cte2_worker as (
+    select
+        list_reduce(tokens, lambda str, tk: replace(str, tk, tk[1] || '-' || tk[2]),  str) as answer
+    from cte1_common
+)
+select lower(answer) from cte2_worker);
+
