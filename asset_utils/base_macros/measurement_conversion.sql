@@ -9,7 +9,7 @@
 -- The schema `base_macros" exists.
 --
 
-create or replace macro base_macros.convert_to_millimetres(units, sz) as (
+create or replace macro base_macros.convert_to_millimetres(units varchar, sz decimal) as (
 with cte1_common as (
     select lower(units) as unitsu
 ), cte2_worker as ( 
@@ -27,7 +27,7 @@ with cte1_common as (
 select round(answer, 0) from cte2_worker
 );
 
-create or replace macro base_macros.convert_to_metres(sz, units) as (
+create or replace macro base_macros.convert_to_metres(units varchar, sz decimal) as (
 with cte1_common as (
     select lower(units) as unitsu
 ), cte2_worker as ( 
@@ -41,11 +41,11 @@ with cte1_common as (
         else null
     end as answer
     from cte1_common
-) select round(answer, 0) from cte2_worker
+) select try_cast(round(answer, 0) as integer) from cte2_worker
 );
 
 
-create or replace macro base_macros.convert_to_litres_per_second(fl, units) as (
+create or replace macro base_macros.convert_to_litres_per_second(units varchar, fl decimal) as (
 with cte1_common as (
     select lower(units) as unitsu
 ), cte2_worker as ( 
@@ -64,7 +64,7 @@ select round(answer, 3) from cte2_worker
 );
 
 
-create or replace macro base_macros.convert_to_cubic_metres_per_hour(fl, units) as (
+create or replace macro base_macros.convert_to_cubic_metres_per_hour(units varchar, fl decimal) as (
 with cte1_common as (
     select lower(units) as unitsu
 ), cte2_worker as ( 
@@ -82,7 +82,7 @@ with cte1_common as (
 select round(answer, 3) from cte2_worker
 );
 
-create or replace macro base_macros.convert_to_kilowatts(pw, units) as (
+create or replace macro base_macros.convert_to_kilowatts(units varchar, pw decimal) as (
 with cte1_common as (
     select lower(units) as unitsu
 ), cte2_worker as ( 
