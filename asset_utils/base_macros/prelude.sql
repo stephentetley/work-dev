@@ -47,3 +47,24 @@ with cte1_common as (
 )
 select lower(answer) from cte2_worker);
 
+create or replace macro base_macros.pascal_case(str varchar) as (
+with cte1_worker as (
+    select
+        regexp_replace(str, '[_-]', ' ', 'g') as normed,
+        regexp_extract_all(normed, '[\s_-]+\p{L}') as tokens,
+        list_reduce(tokens, lambda str, tk: replace(str, tk, upper(trim(tk))), normed) as all_but_first,
+        upper(all_but_first[1:1]) || all_but_first[2:] as answer
+)
+select answer from cte1_worker);
+
+create or replace macro base_macros.camel_case(str varchar) as (
+with cte1_worker as (
+    select
+        regexp_replace(str, '[_-]', ' ', 'g') as normed,
+        regexp_extract_all(normed, '[\s_-]+\p{L}') as tokens,
+        list_reduce(tokens, lambda str, tk: replace(str, tk, upper(trim(tk))), normed) as all_but_first,
+        lower(all_but_first[1:1]) || all_but_first[2:] as answer
+)
+select answer from cte1_worker);
+
+
