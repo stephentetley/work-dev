@@ -17,16 +17,16 @@ create or replace macro base_macros.format_signal3
 -- # Enums
 
 
-create or replace macro base_macros.acdc_3_to_voltage_units(units varchar) as (
+create or replace macro base_macros.acdc_3_to_voltage_units(val varchar) as (
 with cte1_common as (
-    select upper(units) as unitsu
+    select upper(val) as valu
 ), cte2_worker as (
     select case 
-        when t.unitsu in ('AC', 'ALTERNATING CURRENT')    then 'VAC'
-        when t.unitsu in ('DC', 'DIRECT CURRENT')         then 'VDC'
+        when valu = 'AC' or valu = 'ALTERNATING CURRENT'    then 'VAC'
+        when valu = 'DC' or valu = 'DIRECT CURRENT'         then 'VDC'
         else null
     end as answer
-    from cte1_common t
+    from cte1_common
 )
 select answer from cte2_worker);
 
@@ -164,7 +164,7 @@ with cte1_common as (
             when valu = 'KJ/KG' or valu = 'KILOJOULE PER KILOGRAM' then 'KJ/KG'
             when valu = 'A'     or valu = 'UAMPERE'                then 'A'
             when valu = 'KN'    or valu = 'KILONEWTON'             then 'KN'
-            when valu = 'MAN'   or valu = 'MAN'                    then 'MAN'
+            when valu = 'MAN'                                      then 'MAN'
             else null
         end as answer
     from cte1_common
