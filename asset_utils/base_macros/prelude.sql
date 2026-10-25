@@ -53,7 +53,7 @@ with cte1_worker as (
         regexp_replace(str, '[_-]', ' ', 'g') as normed,
         regexp_extract_all(normed, '[\s_-]+\p{L}') as tokens,
         list_reduce(tokens, lambda str, tk: replace(str, tk, upper(trim(tk))), normed) as all_but_first,
-        upper(all_but_first[1:1]) || all_but_first[2:] as answer
+        upper(all_but_first[1]) || all_but_first[2:] as answer
 )
 select answer from cte1_worker);
 
@@ -63,7 +63,7 @@ with cte1_worker as (
         regexp_replace(str, '[_-]', ' ', 'g') as normed,
         regexp_extract_all(normed, '[\s_-]+\p{L}') as tokens,
         list_reduce(tokens, lambda str, tk: replace(str, tk, upper(trim(tk))), normed) as all_but_first,
-        lower(all_but_first[1:1]) || all_but_first[2:] as answer
+        lower(all_but_first[1]) || all_but_first[2:] as answer
 )
 select answer from cte1_worker);
 

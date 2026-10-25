@@ -10,13 +10,13 @@
 --
 
 create or replace macro base_macros.get_variables_table(names varchar[]) as table (
-with cte1_unested as (
+with cte1_common as (
     select unnest(names) as var_name
 )
 select 
     t.var_name, 
     t1.value as var_value,
-    from cte1_unested t
+    from cte1_common t
     left join duckdb_variables() t1 on t1.name = t.var_name
 );
 
