@@ -21,7 +21,7 @@ set variable inputs = ['floc_delta_worklist_xlsx', 'existing_flocs_parquet', 'de
 from base_macros.assert_variables_are_set(getvariable('inputs'));
 from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
-from base_macros.assert_databases_are_loaded(['base_macros', 'asset_facts'. 'asset_lib']);
+from base_macros.assert_databases_are_loaded(['base_macros', 'asset_facts', 'asset_lib']);
 
 --
 create or replace temporary table worklist(
@@ -135,7 +135,7 @@ with cte1_raw as (
         t."Level 5 System Type Name" as level5_system_name,
         t."AIB Reference" as aib_reference,
         t."Solution ID" as solution_id,
-        asset_lib.get_east_north(t."Grid Ref (Override)") as __grid_ref,
+        base_macros.get_east_north(t."Grid Ref (Override)") as __grid_ref,
     from read_xlsx(
         getvariable('floc_delta_worklist_xlsx'),
         all_varchar=true, 

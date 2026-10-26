@@ -20,7 +20,7 @@ set variable inputs = ['simple_equi_parquet'];
 from base_macros.assert_variables_are_set(getvariable('inputs'));
 from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
-from base_macros.assert_databases_are_loaded(['base_macros', 'asset_facts'. 'asset_lib', 'sqlite_db']);
+from base_macros.assert_databases_are_loaded(['base_macros', 'asset_facts', 'asset_lib', 'sqlite_db']);
 
 
 
@@ -83,7 +83,7 @@ select
     'EASTING' as characteristics,
     if(t.easting is not null, 
         format('{:d}', t.easting), 
-        format('{:d}', asset_lib.get_east_north(t.grid_ref).easting)) as char_value
+        format('{:d}', base_macros.get_east_north(t.grid_ref).easting)) as char_value
 from read_parquet(getvariable('simple_equi_parquet')) t
 where t.easting is not null or t.grid_ref is not null;
 
@@ -97,7 +97,7 @@ select
     'NORTHING' as characteristics,
     if(t.northing is not null, 
         format('{:d}', t.northing), 
-        format('{:d}', asset_lib.get_east_north(t.grid_ref).northing)) as char_value
+        format('{:d}', base_macros.get_east_north(t.grid_ref).northing)) as char_value
 from read_parquet(getvariable('simple_equi_parquet')) t
 where t.northing is not null or t.grid_ref is not null;
 

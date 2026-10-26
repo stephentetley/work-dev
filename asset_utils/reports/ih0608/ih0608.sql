@@ -33,6 +33,7 @@ format('{:04d}', coalesce(pos, 9990));
 create or replace temporary macro indent_text (level integer, txt varchar) as
 repeat('..', level-1) || txt;
 
+-- TODO switch to using key
 create or replace temporary view vw_sort_keys as
 with recursive sort_keys(equi_id, sort_key) as (
     select
