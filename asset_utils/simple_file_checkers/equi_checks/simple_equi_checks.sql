@@ -33,7 +33,7 @@ select
     'Bad Manuf-Model Combination' as check_name,
     format('Invalid manfacturer "{}" model "{}" combination', t.manufacturer, t.model_number) as message,
 from simple_equi_worklist.file t
-anti join asset_lake.ztables.manuf t1 on (t1.manufacturer == t.manufacturer and t1.model == t.model_number);
+anti join asset_facts.ztables.manuf_model_number t1 on (t1.manufacturer == t.manufacturer and t1.model == t.model_number);
 
 -- 'Bad Objtype Manuf Combination'
 insert into checker_results by name
@@ -46,7 +46,7 @@ select
     'Bad Objtype-Manuf Combination' as check_name,
     format('No ztable rule for "{}" manufacturer "{}" combination', coalesce(t.equi_type, 'null'), coalesce(t.manufacturer, 'null')) as message,
 from simple_equi_worklist.file t
-anti join asset_lake.ztables.objtype_manuf t1 on (t1.object_type == t.equi_type and t1.manufacturer == t.manufacturer);
+anti join asset_facts.ztables.equi_object_type_manuf t1 on (t1.object_type == t.equi_type and t1.manufacturer == t.manufacturer);
 
 -- 'Unrecognized Equi Type'
 insert into checker_results by name
@@ -59,7 +59,7 @@ select
     'Unrecognized Equi Type' as check_name,
     format('Unrecognized Equi type "{}"', t.equi_type) as message,
 from simple_equi_worklist.file t
-anti join asset_lake.ztables.eqobjl t1 
+anti join asset_facts.ztables.equi_object_type_hierarchy t1 
     on (t1.object_type_1 == t.equi_type);
 
 -- 'Super-Sub Equi Type Error'
@@ -81,7 +81,7 @@ select
     'Super-Sub Equi Type Error' as check_name,
     format('Equi type "{}" cannot be a child of the super-equi type "{}"', t.equi_type, t.parent_type) as message,
 from cte1_add_parent_type t
-anti join asset_lake.ztables.eqobjl t1 
+anti join asset_facts.ztables.equi_object_type_hierarchy t1 
     on (t1.object_type_1 == t.equi_type and t1.object_type == t.parent_type);
 
 -- 'Missing Mandatory Data'

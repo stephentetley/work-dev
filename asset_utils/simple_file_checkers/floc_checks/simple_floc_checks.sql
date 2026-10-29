@@ -116,7 +116,7 @@ select
     'Unrecognized Floc Type' as check_name,
     format('Unrecognized Floc type "{}"', t.floc_type) as message,
 from cte1_levels_1_4 t
-anti join asset_lake.ztables.flobjl t1 
+anti join asset_facts.ztables.floc_object_type_hierarchy t1 
     on (t1.structure_indicator == t.str_indicator and t1.object_type_1 == t.floc_type);
 
 
@@ -151,7 +151,7 @@ select
     'Parent-Child Type Error' as check_name,
     format('Floc type "{}" cannot be a child of the parent type "{}"', t.floc_type, t.parent_type) as message,
 from cte2_add_objtypes t
-anti join asset_lake.ztables.flobjl t1 
+anti join asset_facts.ztables.floc_object_type_hierarchy t1 
     on (t1.structure_indicator == t.str_indicator and t1.object_type == t.parent_type and t1.object_type_1 == t.floc_type);
 
 -- 'Duplicate Functional Locations'

@@ -6,7 +6,7 @@
 --
 
 -- Preliminaries: 
--- The variables `simple_floc_xlsx` and `dest_simple_floc_parquet` are set in 
+-- The variables `source_simple_floc_xlsx` and `dest_simple_floc_parquet` are set in 
 -- DuckDB (i.e. not env vars)
 --
 
@@ -15,7 +15,7 @@
 .bail on
 load excel;
 
-set variable inputs = ['simple_floc_xlsx', 'dest_simple_floc_parquet'];
+set variable inputs = ['source_simple_floc_xlsx', 'dest_simple_floc_parquet'];
 from base_macros.assert_variables_are_set(getvariable('inputs'));
 from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
@@ -29,7 +29,7 @@ with cte1_raw as (
         row_number() over () as source_row,
         base_macros.nulled(trim(columns(t.*))),
     from read_xlsx(
-        getvariable('simple_floc_xlsx'),
+        getvariable('source_simple_floc_xlsx'),
         all_varchar=true, 
         sheet='NewFloc'
     ) as t
@@ -39,7 +39,7 @@ select
     coalesce(try_cast(t."Batch Number" as integer), 1) as batch_number,
     t."Functional Location" as functional_location,
     t."Floc Name" as floc_name,
-    t."Category" as floc_category,
+    try_cast(t."Category" as integer) as floc_category,
     t."Str Indicator" as str_indicator,
     t."Floc Type" as floc_type,
     t."Level5 System Class" as level5_system_class,
@@ -50,7 +50,7 @@ select
     try_cast(t."Cost Center" as integer) as cost_center,
     t."Main Work Center" as main_work_center,
     t."Plant Section" as plant_section,
-    t."Installation Allowed" as installation_allowed,
+    upper(t."Installation Allowed") == 'X' as installation_allowed,
     t."User Status" as user_status,
     t."AI2 SAI Number" as ai2_sai_number,
     t."Grid Ref" as grid_ref,
