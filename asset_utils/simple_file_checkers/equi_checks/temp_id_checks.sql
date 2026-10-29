@@ -4,7 +4,7 @@
 --
 
 -- Preliminary: 
--- The variable `equi_srcfile` is set in DuckDb (i.e. not an env var)
+-- A SimpleEqui table (e.g parquet file) is attached at `simple_equi_worklist`
 --
 
 -- 'Temp ID not ordered'
@@ -14,7 +14,7 @@ with cte1_with_prev as (
         t.source_row,
         t.temp_id,
         lag(t.temp_id, 1) over (order by source_row) as prev_temp_id
-    from simple_equi_worklist t
+    from simple_equi_worklist.file t
 ), cte2_find_violations as (
     select 
         * 

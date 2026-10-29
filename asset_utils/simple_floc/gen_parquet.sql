@@ -26,6 +26,7 @@ from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 create or replace temporary table table1 as
 with cte1_raw as (
     select 
+        row_number() over () as source_row,
         base_macros.nulled(trim(columns(t.*))),
     from read_xlsx(
         getvariable('simple_floc_xlsx'),
@@ -34,6 +35,7 @@ with cte1_raw as (
     ) as t
 )
 select 
+    t.source_row,
     coalesce(try_cast(t."Batch Number" as integer), 1) as batch_number,
     t."Functional Location" as functional_location,
     t."Floc Name" as floc_name,

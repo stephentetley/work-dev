@@ -6,7 +6,7 @@
 --
 
 -- Preliminary: 
--- The variable `floc_srcfile` is set in DuckDb (i.e. not an env var)
+-- A SimpleFloc table (e.g parquet file) is attached at `simple_floc_worklist`
 --
 
 -- 'Floc Name too long'
@@ -19,7 +19,7 @@ select
     t.functional_location    as floc_or_temp_id,
     'Floc Name too long' as check_name,
     format('Floc Name "{}" is too long at {} characters', t.floc_name, length(t.floc_name)) as message,
-from simple_floc_worklist t
+from simple_floc_worklist.file t
 where length(t.floc_name) > 40;
 
 -- malformed floc
@@ -54,7 +54,7 @@ select
     t.functional_location as floc_or_temp_id,
     'Malformed Floc' as check_name,
     format('Function location "{}" is malformed for level level {}', t.functional_location, t.floc_category) as message,
-from simple_floc_worklist t
+from simple_floc_worklist.file t
 where check_floc_shape(t.functional_location, t.floc_category) > 40;
 
 
@@ -70,7 +70,7 @@ select
     'Missing or Invalid Category' as check_name,
     format('Installation Allowed checked on floc "{}" which is category {}', 
             t.functional_location, t.floc_category) as message,
-from simple_floc_worklist t
+from simple_floc_worklist.file t
 where t.floc_category is null or t.floc_category < 1 or t.floc_category > 6;
 
 
@@ -85,7 +85,7 @@ select
     'Incorrect Installation Allowed' as check_name,
     format('Installation Allowed checked on floc "{}" which is category {}', 
             t.functional_location, t.floc_category) as message,
-from simple_floc_worklist t
+from simple_floc_worklist.file t
 where t.installation_allowed and t.floc_category < 5;
 
 -- 'Missing Installation Allowed'
@@ -99,13 +99,13 @@ select
     'Missing Installation Allowed' as check_name,
     format('Installation Allowed missing on floc "{}" which is category {}', 
             t.functional_location, t.floc_category) as message,
-from simple_floc_worklist t
+from simple_floc_worklist.file t
 where t.installation_allowed == false and t.floc_category > 5;
 
 -- 'Unrecognized Floc Type'
 insert into checker_results by name
 with cte1_levels_1_4 as (
-    select * from simple_floc_worklist where floc_category < 5
+    select * from simple_floc_worklist.file where floc_category < 5
 )
 select 
     t.source_row,
@@ -127,8 +127,8 @@ with cte1_floc_and_parent as (
     select 
         t.functional_location,
         max(t1.functional_location) as parent,
-    from simple_floc_worklist t
-    join simple_floc_worklist t1 on starts_with(t.functional_location, t1.functional_location) and t1.functional_location < t.functional_location
+    from simple_floc_worklist.file t
+    join simple_floc_worklist.file t1 on starts_with(t.functional_location, t1.functional_location) and t1.functional_location < t.functional_location
     group by all
 ), cte2_add_objtypes as (
     select 
@@ -139,8 +139,8 @@ with cte1_floc_and_parent as (
         t.parent,
         t2.floc_type as parent_type
     from cte1_floc_and_parent t
-    join simple_floc_worklist t1 on t1.functional_location = t.functional_location
-    join simple_floc_worklist t2 on t2.functional_location = t.parent
+    join simple_floc_worklist.file t1 on t1.functional_location = t.functional_location
+    join simple_floc_worklist.file t2 on t2.functional_location = t.parent
 )
 select 
     t.source_row,
@@ -160,7 +160,7 @@ with cte1_floc_occurs as (
     select 
         t.functional_location,
         list(t.source_row) as row_nums
-    from simple_floc_worklist t
+    from simple_floc_worklist.file t
     group by all
 ), cte2_floc_duplicates as (
     select 
@@ -185,7 +185,7 @@ select
     source_row, 
     functional_location, 
     longname as missing1, 
-from simple_floc_worklist 
+from simple_floc_worklist.file 
 where columns(colname) is null;
 
 

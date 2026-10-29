@@ -6,7 +6,7 @@
 --
 
 -- Preliminary: 
--- The variable `equi_srcfile` is set in DuckDb (i.e. not an env var)
+-- A SimpleEqui table (e.g parquet file) is attached at `simple_equi_worklist`
 --
 
 
@@ -17,7 +17,7 @@ with cte1_find_superlines as (
         t.source_row,
         t.temp_id,
         t.super_equi_id
-    from simple_equi_worklist t
+    from simple_equi_worklist.file t
     where regexp_matches(t.super_equi_id, '^\$\d+$')
 ), cte2_missing_parent as (
     select 
@@ -25,7 +25,7 @@ with cte1_find_superlines as (
         t.temp_id,
         t.super_equi_id,
     from cte1_find_superlines t
-    where not exists (from simple_equi_worklist t1 
+    where not exists (from simple_equi_worklist.file t1 
                     where t1.temp_id = t.super_equi_id)
 ) 
 select 
@@ -46,7 +46,7 @@ with cte1_find_superlines as (
         t.source_row,
         t.temp_id,
         t.super_equi_id
-    from simple_equi_worklist t
+    from simple_equi_worklist.file t
     where regexp_matches(t.super_equi_id, '^\$\d+$')
 ), cte2_child_before_parent as (
     select 
@@ -74,7 +74,7 @@ with cte1_find_superlines as (
         t.source_row,
         t.temp_id,
         t.super_equi_id
-    from simple_equi_worklist t
+    from simple_equi_worklist.file t
     where regexp_matches(t.super_equi_id, '^\$\d+$') and t.temp_id == t.super_equi_id
 ) 
 select 
