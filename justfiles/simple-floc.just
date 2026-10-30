@@ -14,7 +14,6 @@ check :
     duckdb -init duckrc \
         -c "attach '.simple_floc/simple_floc.parquet' as simple_floc_worklist;" \
         -c ".read $WORK_DEV_ROOT/asset_utils/simple_file_checkers/setup_checker_tables.sql" \
-        -c ".tables"    \
         -c ".read $WORK_DEV_ROOT/asset_utils/simple_file_checkers/floc_checks/simple_floc_checks.sql" \
         -c "select * from checker_results;" \
         -c "detach simple_floc_worklist;" \
