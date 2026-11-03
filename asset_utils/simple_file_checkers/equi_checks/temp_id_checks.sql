@@ -11,6 +11,7 @@
 insert into checker_results by name
 with cte1_with_prev as (
     select 
+        t.source_file,
         t.source_row,
         t.temp_id,
         lag(t.temp_id, 1) over (order by source_row) as prev_temp_id
@@ -22,8 +23,8 @@ with cte1_with_prev as (
     where temp_id <= prev_temp_id
 )
 select 
+    t.source_file,
     t.source_row,
-    getvariable('equi_srcfile') as source_file,
     'equi'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.temp_id as floc_or_temp_id,

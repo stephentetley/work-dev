@@ -26,6 +26,7 @@ from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 create or replace temporary table table1 as
 with cte1_raw as (
     select 
+        getvariable('source_simple_floc_xlsx') as source_file,
         row_number() over () as source_row,
         base_macros.nulled(trim(columns(t.*))),
     from read_xlsx(
@@ -35,6 +36,7 @@ with cte1_raw as (
     ) as t
 )
 select 
+    t.source_file,
     t.source_row,
     coalesce(try_cast(t."Batch Number" as integer), 1) as batch_number,
     t."Functional Location" as functional_location,
@@ -63,7 +65,7 @@ where t."Functional Location" is not null and t."Floc Name" is not null;
 
 -- Don't fix the output table name, user defined...
 copy (
-    select * from table1 order by batch_number, functional_location
+    select * from table1 order by batch_number, source_file, functional_location
 ) to (getvariable('dest_simple_floc_parquet')) (format parquet, compression snappy);
 
 select 'Wrote: ' || getvariable('dest_simple_floc_parquet') as result;

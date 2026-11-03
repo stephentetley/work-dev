@@ -24,6 +24,7 @@ from base_macros.assert_databases_are_loaded(['base_macros']);
 create or replace temporary table table1 as
 with cte1_raw as (
     select 
+        getvariable('source_simple_equi_xlsx') as source_file,
         row_number() over () as source_row,
         base_macros.nulled(trim(columns(t.*))),
     from read_xlsx(
@@ -33,6 +34,7 @@ with cte1_raw as (
     ) as t
 )
 select 
+    t.source_file,
     t.source_row,
     try_cast(t."Batch Number" as integer) as batch_number,
     t."Temp ID" as temp_id,
@@ -67,7 +69,7 @@ where t."Temp ID" is not null and t."Equi Name" is not null;
 
 -- Don't fix the output table name, user defined...
 copy (
-    select * from table1 order by batch_number, functional_location, temp_id
+    select * from table1 order by batch_number, source_file, functional_location, temp_id
 ) to (getvariable('dest_simple_equi_parquet')) (format parquet, compression snappy);
 
 select 'Wrote: ' || getvariable('dest_simple_equi_parquet') as result;

@@ -14,6 +14,7 @@
 insert into checker_results by name
 with cte1_find_superlines as (
     select 
+        t.source_file,
         t.source_row,
         t.temp_id,
         t.super_equi_id
@@ -21,6 +22,7 @@ with cte1_find_superlines as (
     where regexp_matches(t.super_equi_id, '^\$\d+$')
 ), cte2_missing_parent as (
     select 
+        t.source_file,
         t.source_row,
         t.temp_id,
         t.super_equi_id,
@@ -29,8 +31,8 @@ with cte1_find_superlines as (
                     where t1.temp_id = t.super_equi_id)
 ) 
 select 
+    t.source_file,
     t.source_row,
-    getvariable('equi_srcfile') as source_file,
     'equi'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.temp_id as floc_or_temp_id,
@@ -43,6 +45,7 @@ from cte2_missing_parent t;
 insert into checker_results by name
 with cte1_find_superlines as (
     select 
+        t.source_file,
         t.source_row,
         t.temp_id,
         t.super_equi_id
@@ -50,6 +53,7 @@ with cte1_find_superlines as (
     where regexp_matches(t.super_equi_id, '^\$\d+$')
 ), cte2_child_before_parent as (
     select 
+        t.source_file,
         t.source_row,
         t.temp_id,
         t.super_equi_id,
@@ -57,8 +61,8 @@ with cte1_find_superlines as (
     where t.temp_id < t.super_equi_id
 ) 
 select 
+    t.source_file,
     t.source_row,
-    getvariable('equi_srcfile') as source_file,
     'equi'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.temp_id as floc_or_temp_id,
@@ -71,6 +75,7 @@ from cte2_child_before_parent t;
 insert into checker_results by name
 with cte1_find_superlines as (
     select 
+        t.source_file,
         t.source_row,
         t.temp_id,
         t.super_equi_id
@@ -78,8 +83,8 @@ with cte1_find_superlines as (
     where regexp_matches(t.super_equi_id, '^\$\d+$') and t.temp_id == t.super_equi_id
 ) 
 select 
+    t.source_file,
     t.source_row,
-    getvariable('equi_srcfile') as source_file,
     'equi'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.temp_id as floc_or_temp_id,

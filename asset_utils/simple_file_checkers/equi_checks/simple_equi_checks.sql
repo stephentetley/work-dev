@@ -12,8 +12,8 @@
 -- 'Equi Name too long'
 insert into checker_results by name
 select 
+    t.source_file,
     t.source_row,
-    getvariable('equi_srcfile') as source_file,
     'equi'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.temp_id as floc_or_temp_id,
@@ -25,8 +25,8 @@ where length(t.equi_name) > 40;
 -- 'Bad Manuf Model combination'
 insert into checker_results by name
 select 
+    t.source_file,
     t.source_row,
-    getvariable('equi_srcfile') as source_file,
     'equi'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.temp_id as floc_or_temp_id,
@@ -38,8 +38,8 @@ anti join asset_facts.ztables.manuf_model_number t1 on (t1.manufacturer == t.man
 -- 'Bad Objtype Manuf Combination'
 insert into checker_results by name
 select 
+    t.source_file,
     t.source_row,
-    getvariable('equi_srcfile') as source_file,
     'equi'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.temp_id as floc_or_temp_id,
@@ -51,8 +51,8 @@ anti join asset_facts.ztables.equi_object_type_manuf t1 on (t1.object_type == t.
 -- 'Unrecognized Equi Type'
 insert into checker_results by name
 select 
+    t.source_file,
     t.source_row,
-    getvariable('equi_srcfile') as source_file,
     'equi'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.temp_id as floc_or_temp_id,
@@ -73,8 +73,8 @@ with cte1_add_parent_type as (
     join simple_equi_worklist.file t1 on t1.temp_id = t.super_equi_id
 )
 select 
+    t.source_file,
     t.source_row,
-    getvariable('equi_srcfile') as source_file,
     'equi'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.temp_id as floc_or_temp_id,
@@ -87,6 +87,7 @@ anti join asset_facts.ztables.equi_object_type_hierarchy t1
 -- 'Missing Mandatory Data'
 create or replace temporary macro equi_missing_mandatory(colname varchar, longname varchar) as table 
 select 
+    source_file,
     source_row, 
     temp_id,
     longname as missing1, 
@@ -123,6 +124,7 @@ with cte1_missing1 as (
     select * from equi_missing_mandatory('user_status', 'User Status')
 ), cte2_grouped as (
     select
+        t.source_file,
         t.source_row, 
         t.temp_id,
         string_agg(t.missing1, ', ' order by t.missing1 desc) as missing,
@@ -130,8 +132,8 @@ with cte1_missing1 as (
     group by all
 )
 select 
+    t.source_file,
     t.source_row,
-    getvariable('equi_srcfile') as source_file,
     'equi'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.temp_id as floc_or_temp_id,

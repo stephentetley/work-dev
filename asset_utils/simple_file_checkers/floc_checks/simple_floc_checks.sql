@@ -12,8 +12,8 @@
 -- 'Floc Name too long'
 insert into checker_results by name
 select 
+    t.source_file,
     t.source_row,
-    getvariable('floc_srcfile') as source_file,
     'floc'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.functional_location    as floc_or_temp_id,
@@ -47,8 +47,8 @@ create or replace temporary macro check_floc_shape(flocname varchar, category in
 -- malformed floc
 insert into checker_results by name
 select 
+    t.source_file,
     t.source_row,
-    getvariable('floc_srcfile') as source_file,
     'floc'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.functional_location as floc_or_temp_id,
@@ -62,8 +62,8 @@ where check_floc_shape(t.functional_location, t.floc_category) > 40;
 -- 'Missing or Invalid Category'
 insert into checker_results by name
 select 
+    t.source_file,
     t.source_row,
-    getvariable('floc_srcfile') as source_file,
     'equi'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.functional_location as floc_or_temp_id,
@@ -77,8 +77,8 @@ where t.floc_category is null or t.floc_category < 1 or t.floc_category > 6;
 -- 'Incorrect Installation Allowed'
 insert into checker_results by name
 select 
+    t.source_file,
     t.source_row,
-    getvariable('floc_srcfile') as source_file,
     'equi'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.functional_location as floc_or_temp_id,
@@ -91,8 +91,8 @@ where t.installation_allowed and t.floc_category < 5;
 -- 'Missing Installation Allowed'
 insert into checker_results by name
 select 
+    t.source_file,
     t.source_row,
-    getvariable('floc_srcfile') as source_file,
     'equi'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.functional_location as floc_or_temp_id,
@@ -108,8 +108,8 @@ with cte1_levels_1_4 as (
     select * from simple_floc_worklist.file where floc_category < 5
 )
 select 
+    t.source_file,
     t.source_row,
-    getvariable('floc_srcfile') as source_file,
     'floc'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.functional_location as floc_or_temp_id,
@@ -132,6 +132,7 @@ with cte1_floc_and_parent as (
     group by all
 ), cte2_add_objtypes as (
     select 
+        t1.source_file,
         t1.source_row,
         t.functional_location,
         t1.str_indicator,
@@ -143,8 +144,8 @@ with cte1_floc_and_parent as (
     join simple_floc_worklist.file t2 on t2.functional_location = t.parent
 )
 select 
+    t.source_file,
     t.source_row,
-    getvariable('floc_srcfile') as source_file,
     'floc'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.functional_location as floc_or_temp_id,
@@ -159,7 +160,8 @@ insert into checker_results by name
 with cte1_floc_occurs as (
     select 
         t.functional_location,
-        list(t.source_row) as row_nums
+        list(t.source_file) as source_files,
+        list(t.source_row) as row_nums,
     from simple_floc_worklist.file t
     group by all
 ), cte2_floc_duplicates as (
@@ -169,8 +171,8 @@ with cte1_floc_occurs as (
     where list_count(t.row_nums) > 1
 )
 select 
+    list_min(t.source_files) as source_file,
     list_min(t.row_nums) as source_row,
-    getvariable('floc_srcfile') as source_file,
     'floc'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.functional_location as floc_or_temp_id,
@@ -182,6 +184,7 @@ from cte2_floc_duplicates t;
 -- 'Missing Mandatory Data'
 create or replace temporary macro floc_missing_mandatory(colname varchar, longname varchar) as table 
 select 
+    source_file,
     source_row, 
     functional_location, 
     longname as missing1, 
@@ -215,6 +218,7 @@ with cte1_missing1 as (
     select * from floc_missing_mandatory('startup_date', 'Startup Date')
 ), cte2_grouped as (
     select
+        t.source_file,
         t.source_row, 
         t.functional_location,
         string_agg(t.missing1, ', ' order by t.missing1 desc) as missing,
@@ -222,8 +226,8 @@ with cte1_missing1 as (
     group by all
 )
 select 
+    t.source_file,
     t.source_row,
-    getvariable('floc_srcfile') as source_file,
     'floc'::checker_source as source_type, 
     'error'::checker_severity as severity, 
     t.functional_location as floc_or_temp_id,
