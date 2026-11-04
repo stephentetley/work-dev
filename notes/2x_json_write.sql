@@ -63,9 +63,9 @@ select
      unnest(from_json(t.jsonrows, '[' || colspec || ']'), recursive := true)
 from
     read_json(filename) t
-where
-    json_extract_string(t, '$.tab') = tablename
-);
+where t.tab = tablename);
+
+.print 'deserialize...'
 
 create or replace table table1_back as
 select * from get_table('tabbed.json', 'table1', '{"name": "varchar", "score": "integer"}');
