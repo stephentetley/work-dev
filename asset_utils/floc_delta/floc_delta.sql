@@ -343,7 +343,7 @@ order by t.funcloc;
 -- Don't fix the output table name...
 copy (
     select * from vw_floc_delta_simple_floc order by "Functional Location"
-) to (getvariable('dest_simple_floc_xlsx')) (format xlsx, header true, sheet 'NewFloc');
+) to ($dest_simple_floc_xlsx) (format xlsx, header true, sheet 'NewFloc');
 
-select 'Wrote: ' || getvariable('dest_simple_floc_xlsx') as result;
+select ('Wrote: ' || $dest_simple_floc_xlsx) as result;
 

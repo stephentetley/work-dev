@@ -25,7 +25,7 @@ with cte1_raw as (
     select 
         base_macros.nulled(trim(columns(t.*))),
     from read_xlsx(
-            getvariable('source_ih06_xlsx'), 
+            $source_ih06_xlsx, 
             sheet='Sheet1',
             all_varchar=true) as t
 )
@@ -59,7 +59,7 @@ group by all;
 -- Don't fix the output table name, user defined...
 copy (
     select * from vw_table1 order by functional_location
-) to (getvariable('dest_minimal_floc_parquet')) (format parquet, compression snappy);
+) to ($dest_minimal_floc_parquet) (format parquet, compression snappy);
 
-select 'Wrote: ' || getvariable('dest_minimal_floc_parquet') as result;
+select ('Wrote: ' || $dest_minimal_floc_parquet) as result;
 

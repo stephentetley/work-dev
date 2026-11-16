@@ -23,6 +23,8 @@ from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
 from base_macros.assert_databases_are_loaded(['base_macros', 'asset_facts', 'asset_lib', 'sqlite_db']);
 
+create or replace temporary table simple_flocs as
+select * from read_parquet($simple_floc_parquet);
 
 
 insert into sqlite_db.floc_create_functional_location by name
@@ -45,7 +47,7 @@ select
     'ZFLOCST' as status_profile,
     t.user_status as user_status,
     t.user_status as status_of_an_object,
-from read_parquet(getvariable('simple_floc_parquet')) t;
+from simple_flocs t;
 
     
 
@@ -57,7 +59,7 @@ select
     'SOLUTION_ID' as class,
     'SOLUTION_ID' as characteristics,
     t.solution_id as char_value,
-from read_parquet(getvariable('simple_floc_parquet')) t
+from simple_flocs t
 where t.solution_id is not null;
 
 
@@ -71,7 +73,7 @@ select
     if(t.easting is not null, 
         format('{:d}', t.easting), 
         format('{:d}', base_macros.get_east_north(t.grid_ref).easting)) as char_value
-from read_parquet(getvariable('simple_floc_parquet')) t
+from simple_flocs t
 where t.easting is not null or t.grid_ref is not null;
 
 
@@ -85,7 +87,7 @@ select
     if(t.northing is not null, 
         format('{:d}', t.northing), 
         format('{:d}', base_macros.get_east_north(t.grid_ref).northing)) as char_value
-from read_parquet(getvariable('simple_floc_parquet')) t
+from simple_flocs t
 where t.northing is not null or t.grid_ref is not null;
 
 
@@ -98,7 +100,7 @@ select
     'AIB_REFERENCE' as class,
     'AI2_AIB_REFERENCE' as characteristics,
     t.ai2_sai_number as char_value,
-from read_parquet(getvariable('simple_floc_parquet')) t;
+from simple_flocs t;
 
 -- SYSTEM_TYPE
 insert into sqlite_db.floc_create_classification by name
@@ -108,5 +110,5 @@ select
     t.level5_system_class as class,
     'SYSTEM_TYPE' as characteristics,
     t.level5_system_name as char_value,
-from read_parquet(getvariable('simple_floc_parquet')) t
+from simple_flocs t
 where t.level5_system_class is not null;
