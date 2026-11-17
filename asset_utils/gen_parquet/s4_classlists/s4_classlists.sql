@@ -62,6 +62,7 @@ select * from cte3_filled;
 
 create or replace temporary view vw_class_chars as
 select
+    row_number() over (partition by class_name_filled order by row_ix)  as char_ix,
     t.class_name_filled as class_name,
     t.char_name as char_name,
     t.class_description_filled as class_description,
@@ -74,6 +75,7 @@ where t.char_name is not null;
 
 create or replace temporary view vw_char_enums as 
 select
+    row_number() over (partition by class_name_filled, char_name_filled order by row_ix)  as enum_ix,
     t.class_name_filled as class_name,
     t.char_name_filled as char_name,
     t.char_value as enum_value,

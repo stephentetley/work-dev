@@ -10,9 +10,8 @@
 -- The variables `equi_source_parquet` is set in  DuckDb (i.e. not env vars)
 --
 
-load fts;
-
 .bail on
+load fts;
 load excel;
 
 set variable inputs = ['equi_source_parquet'];
