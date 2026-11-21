@@ -60,6 +60,29 @@ with cte1_raw as (
 )
 select * from cte3_filled;
 
+create or replace temporary macro get_ddl_data_type(char_type varchar, num_length integer, num_prec integer) as (
+with cte1_params as (
+    select 
+        coalesce(char_type, 'varchar').lower() as typ,
+        coalesce(num_length, 10) as len,
+        coalesce(num_prec, 0) as prec,
+)
+select 
+    case 
+        when t.typ = 'char' then 'varchar'
+        when t.typ = 'enum' then 'varchar'
+        when t.typ = 'num' and t.prec > 0 then format('decimal({}, {})', t.len, t.prec)
+        when t.typ = 'num' and t.len < 10 and t.prec = 0 then 'integer'
+        when t.typ = 'num' and t.len >= 10 and t.len < 19 and t.prec = 0  then 'bigint'
+        when t.typ = 'num' and t.len >= 19 and t.prec = 0 then 'hugeint'
+        else t.typ
+    end
+from cte1_params t);
+
+
+
+
+
 create or replace temporary view vw_class_chars as
 select
     row_number() over (partition by class_name_filled order by row_ix)  as char_ix,
@@ -70,6 +93,7 @@ select
     t.data_type as char_type,
     t.char_length as char_length,
     t.char_precision as char_precision,
+    get_ddl_data_type(t.data_type, t.char_length::integer, t.char_precision::integer) as ddl_data_type,
 from temp1 t
 where t.char_name is not null;
 
