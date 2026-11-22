@@ -40,6 +40,7 @@ with cte1_raw as (
         order by process_group_name
     ) to ($dest_dir || '/process_group_names.parquet') (format parquet, compression snappy)
 )
+select 'done' as ans;
 
 select 'Wrote: ' || $dest_dir || '/process_group_names.parquet' as result;
 
@@ -63,6 +64,7 @@ with cte1_raw as (
         order by process_name
     ) to ($dest_dir || '/process_names.parquet') (format parquet, compression snappy)
 )
+select 'done' as ans;
 
 
 select 'Wrote: ' || $dest_dir || '/process_names.parquet' as result;

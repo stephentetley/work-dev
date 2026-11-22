@@ -111,6 +111,7 @@ with cte1_ata_raw as (
         order by class_name, attribute_set_name, attribute_name
     ) to ($dest_dir || '/ai2_equi_classlist.parquet') (format parquet, compression snappy)
 )
+select 'done' as ans;
 
 select 'Wrote: ' || $dest_dir || '/ai2_equi_classlist.parquet' as result;
 

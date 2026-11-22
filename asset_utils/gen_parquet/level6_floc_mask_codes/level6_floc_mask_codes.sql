@@ -61,6 +61,7 @@ with cte1_raw as (
         order by object_type
     ) to ($dest_dir || '/level6_floc_mask_codes.parquet') (format parquet, compression snappy)
 )
+select 'done' as ans;
 
 select 'Wrote: ' || $dest_dir || '/level6_floc_mask_codes.parquet' as result;
 

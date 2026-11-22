@@ -39,6 +39,7 @@ with cte1_raw as (
         order by manufacturer, model
     ) to ($dest_dir || '/manuf_model_number.parquet') (format parquet, compression snappy)
 )
+select 'done' as ans;
 
 
 select 'Wrote: ' || getvariable('dest_dir') || '/manuf_model_number.parquet' as result;

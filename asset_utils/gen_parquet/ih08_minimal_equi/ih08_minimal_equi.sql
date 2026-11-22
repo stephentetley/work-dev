@@ -69,6 +69,7 @@ with cte1_raw as (
         select * from cte3_tidied order by functional_location
     ) to ($dest_minimal_equi_parquet) (format parquet, compression snappy)
 )
+select 'done' as ans;
 
 select 'Wrote: ' || $dest_minimal_equi_parquet as result;
 

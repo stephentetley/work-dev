@@ -38,6 +38,7 @@ with cte1_raw as (
         order by object_type
     ) to ($dest_dir || '/floc_object_type_description.parquet') (format parquet, compression snappy)
 )
+select 'done' as ans;
 
 select 'Wrote: ' || $dest_dir || '/floc_object_type_description.parquet' as result;
 

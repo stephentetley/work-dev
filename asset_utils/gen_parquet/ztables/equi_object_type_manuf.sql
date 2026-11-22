@@ -40,6 +40,7 @@ with cte1_raw as (
         order by object_type, manufacturer
     ) to ($dest_dir || '/equi_object_type_manuf.parquet') (format parquet, compression snappy)
 )
+select 'done' as ans;
 
 select 'Wrote: ' || $dest_dir || '/equi_object_type_manuf.parquet' as result;
 

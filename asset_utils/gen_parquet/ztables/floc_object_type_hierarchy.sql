@@ -42,6 +42,7 @@ with cte1_raw as (
         order by structure_indicator, object_type, object_type_1
     ) to ($dest_dir || '/floc_object_type_hierarchy.parquet') (format parquet, compression snappy)
 )
+select 'done' as ans;
 
 select 'Wrote: ' || $dest_dir || '/floc_object_type_hierarchy.parquet' as result;
 

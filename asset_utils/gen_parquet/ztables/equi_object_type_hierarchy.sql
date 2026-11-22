@@ -41,6 +41,7 @@ with cte1_raw as (
         order by object_type, object_type_1, equipment_category
     ) to ($dest_dir || '/equi_object_type_hierarchy.parquet') (format parquet, compression snappy)
 )
+select 'done' as ans;
 
-select 'Wrote: ' || getvariable('dest_dir') || '/equi_object_type_hierarchy.parquet' as result;
+select 'Wrote: ' || $dest_dir || '/equi_object_type_hierarchy.parquet' as result;
 

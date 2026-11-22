@@ -52,6 +52,7 @@ with cte1_raw as (
         order by equiclass
     ) to ($dest_dir || '/equiclass_to_category_mapping.parquet') (format parquet, compression snappy)
 )
+select 'done' as ans;
 
 select 'Wrote: ' || $dest_dir || '/equiclass_to_category_mapping.parquet' as result;
 

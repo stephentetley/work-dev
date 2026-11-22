@@ -94,6 +94,7 @@ with cte1_raw as (
         order by cat_prof
     ) to ($dest_dir || '/catalog_profile.parquet') (format parquet, compression snappy)
 )
+select 'done' as ans;
 
 
-select 'Wrote: ' || getvariable('dest_dir') || '/catalog_profile.parquet' as result;
+select 'Wrote: ' || $dest_dir || '/catalog_profile.parquet' as result;

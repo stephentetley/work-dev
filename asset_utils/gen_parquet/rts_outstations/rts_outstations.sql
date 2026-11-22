@@ -73,6 +73,7 @@ with cte1_raw as (
         select * from cte3_decoded order by filename, row_ix
     ) to (getvariable('dest_path')) (format parquet, compression snappy)
 )
+select 'done' as ans;
 
-select 'Wrote: ' || getvariable('dest_path') as result;
+select 'Wrote: ' || $dest_path as result;
 

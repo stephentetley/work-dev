@@ -28,21 +28,24 @@ from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
 from base_macros.assert_databases_are_loaded(['base_macros']);
 
+-- SET GLOBAL table_function_identifier_conversion = 'DISABLE_IMPLICIT_STRING';
+
 -- Copied text from Okular may have 2 or 3 tabs (2 if column 3 is blank)
 -- This cause a parse error for the csv parser
-create or replace temporary table table1 as
+
+
 with cte1_raw as (
     select 
         t.content,
-    from read_text(getvariable(source_txt)) t
+    from read_text($source_txt) t
 ), cte2_lines as (
     select 
-        unnest(array_pop_front(regexp_split_to_array(t.content, '\n'))) as textline
+        unnest(array_pop_front(regexp_split_to_array(t.content, E'\n'))) as textline
     from cte1_raw t
 ), cte3_numbered_lines as (
     select
         row_number() over () as row_ix,
-        regexp_split_to_array(t.textline, '\t') as arr, 
+        regexp_split_to_array(t.textline, E'\t') as arr, 
     from cte2_lines t
 ), cte4_filtered as (
     select
@@ -52,13 +55,14 @@ with cte1_raw as (
         if(length(arr) == 3, base_macros.nulled(trim(arr[3])), null) as short,
     from cte3_numbered_lines t
     where length(arr) >= 2
+), cte5_output as materialized (
+    -- Write to `dest_dir`, file_name is fixed...
+    copy (
+        select * from cte4_filtered
+        order by medium
+    ) to ($dest_dir || '/rts_abbreviations.parquet') (format parquet, compression snappy)
 )
-select * from cte4_filtered;
+select 'done' as ans;
 
--- Write to `dest_dir`, file_name is fixed...
-copy (
-    select * from table1
-    order by medium
-) to (getvariable('dest_dir') || '/rts_abbreviations.parquet') (format parquet, compression snappy);
 
-select 'Wrote: ' || getvariable('dest_dir') || '/rts_abbreviations.parquet' as result;
+select 'Wrote: ' || $dest_dir || '/rts_abbreviations.parquet' as result;

@@ -128,6 +128,7 @@ with cte1_raw as (
         order by class_name, char_name, enum_ix
     ) to ($dest_dir || make_enums_name($source_xlsx)) (format parquet, compression snappy)
 )
+select 'done' as ans;
 
 select 'Wrote: ' || make_classlist_name($source_xlsx) as result;
 select 'Wrote: ' || make_enums_name($source_xlsx) as result;

@@ -45,6 +45,7 @@ with cte1_raw as (
         order by s4_site_funcloc, ai2_installation_id
     ) to ($dest_dir || '/site_mapping.parquet') (format parquet, compression snappy)
 )
+select 'done' as ans;
 
 select 'Wrote: ' || $dest_dir || '/site_mapping.parquet' as result;
 
