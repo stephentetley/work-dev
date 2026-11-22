@@ -42,5 +42,5 @@ with cte1_raw as (
 select 'done' as ans;
 
 
-select 'Wrote: ' || getvariable('dest_dir') || '/manuf_model_number.parquet' as result;
+select 'Wrote: ' || $dest_dir || '/manuf_model_number.parquet' as result;
 
