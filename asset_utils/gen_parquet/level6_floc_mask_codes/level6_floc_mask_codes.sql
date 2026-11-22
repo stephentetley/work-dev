@@ -32,12 +32,12 @@ create or replace temporary macro make_fstring(mask_code varchar) as
     regexp_extract(mask_code, '^(\p{L}+)#+$', 1) 
         || make_num_fstring(regexp_extract(mask_code, '^\p{L}+(#+)$', 1));
 
-create or replace temporary table table1 as
+
 with cte1_raw as (
     select 
         trim(columns(t.*)),
     from read_xlsx(
-            getvariable('source_xlsx'), 
+            $source_xlsx, 
             all_varchar=true) as t
 ), cte2_columns_defined as (
     select
@@ -54,14 +54,13 @@ with cte1_raw as (
         max(t.fstring) as fstring,
     from cte2_columns_defined t
     group by t.object_type
+), cte4_output as materialized (
+    -- Write to `dest_dir`, file_name is fixed...
+    copy (
+        select * from cte3_no_dups
+        order by object_type
+    ) to ($dest_dir || '/level6_floc_mask_codes.parquet') (format parquet, compression snappy)
 )
-select * from cte3_no_dups;
 
--- Write to `dest_dir`, file_name is fixed...
-copy (
-    select * from table1
-    order by object_type
-) to (getvariable('dest_dir') || '/level6_floc_mask_codes.parquet') (format parquet, compression snappy);
-
-select 'Wrote: ' || getvariable('dest_dir') || '/level6_floc_mask_codes.parquet' as result;
+select 'Wrote: ' || $dest_dir || '/level6_floc_mask_codes.parquet' as result;
 
