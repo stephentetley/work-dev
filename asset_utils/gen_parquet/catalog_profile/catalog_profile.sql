@@ -51,7 +51,7 @@ create or replace temporary macro get_description(str varchar) as
             )
     end;
 
-create or replace table table1 as
+
 with cte1_raw as (
     select 
         row_number() over () as row_ix,
@@ -85,14 +85,15 @@ with cte1_raw as (
         t.description,
     from cte3_with_prev t
     where t.description is not null
+), cte5_final as (
+    select cat_prof, description from cte4_fixup
+), cte6_output as materialized (
+    -- Write to `dest_dir`, file_name is fixed...
+    copy (
+        select * from cte5_final
+        order by cat_prof
+    ) to ($dest_dir || '/catalog_profile.parquet') (format parquet, compression snappy)
 )
-select cat_prof, description from cte4_fixup;
 
-
--- Write to `dest_dir`, file_name is fixed...
-copy (
-    select * from table1
-    order by cat_prof
-) to (getvariable('dest_dir') || '/catalog_profile.parquet') (format parquet, compression snappy);
 
 select 'Wrote: ' || getvariable('dest_dir') || '/catalog_profile.parquet' as result;
