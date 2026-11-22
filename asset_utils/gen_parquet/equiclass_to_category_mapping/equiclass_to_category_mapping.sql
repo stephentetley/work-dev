@@ -20,14 +20,14 @@ from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
 from base_macros.assert_databases_are_loaded(['base_macros']);
 
-create or replace temporary table table1 as
+
 with cte1_raw as (
     select 
         base_macros.nulled(trim(columns(t.*))),
     from read_xlsx(
-            getvariable('source_xlsx'), 
-            sheet='Class and Char_All',
-            all_varchar=true) as t
+            $source_xlsx, 
+            sheet = 'Class and Char_All',
+            all_varchar = true) as t
 ), cte2_columns_defined as (
     select
         t."Class" as equiclass,
@@ -45,14 +45,13 @@ with cte1_raw as (
         list(distinct t.category order by t.category) as all_categories,
     from cte2_columns_defined t
     group by all
-) 
-select * from cte3_no_dups;
+), cte4_output as materialized ( 
+    -- Write to `dest_dir`, file_name is fixed...
+    copy (
+        select * from cte3_no_dups
+        order by equiclass
+    ) to ($dest_dir || '/equiclass_to_category_mapping.parquet') (format parquet, compression snappy)
+)
 
--- Write to `dest_dir`, file_name is fixed...
-copy (
-    select * from table1
-    order by equiclass
-) to (getvariable('dest_dir') || '/equiclass_to_category_mapping.parquet') (format parquet, compression snappy);
-
-select 'Wrote: ' || getvariable('dest_dir') || '/equiclass_to_category_mapping.parquet' as result;
+select 'Wrote: ' || $dest_dir || '/equiclass_to_category_mapping.parquet' as result;
 

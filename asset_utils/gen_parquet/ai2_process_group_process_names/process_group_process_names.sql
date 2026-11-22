@@ -20,7 +20,7 @@ from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
 from base_macros.assert_databases_are_loaded(['base_macros']);
 
-create or replace temporary table process_group as
+
 with cte1_raw as (
     select 
         base_macros.nulled(trim(columns(t.*))),
@@ -34,38 +34,35 @@ with cte1_raw as (
     from cte1_raw t
     where t."ProcessGroupAssetTypeDescription" is not null
     group by all
+), cte3_output as materialized (
+    copy (
+        select * from cte2_with_columns_no_dups
+        order by process_group_name
+    ) to ($dest_dir || '/process_group_names.parquet') (format parquet, compression snappy)
 )
-select * from cte2_with_columns_no_dups;
 
-copy (
-    select * from process_group
-    order by process_group_name
-) to (getvariable('dest_dir') || '/process_group_names.parquet') (format parquet, compression snappy);
+select 'Wrote: ' || $dest_dir || '/process_group_names.parquet' as result;
 
-select 'Wrote: ' || getvariable('dest_dir') || '/process_group_names.parquet' as result;
-
-create or replace temporary table process as
 with cte1_raw as (
     select 
         base_macros.nulled(trim(columns(t.*))),
     from read_xlsx(
-            getvariable('source_xlsx'),
-            sheet='process', 
-            all_varchar=true) as t
+            $source_xlsx,
+            sheet = 'process', 
+            all_varchar = true) as t
 ), cte2_with_columns_no_dups as (
     select
         t."ProcessAssetTypeDescription" as process_name,
     from cte1_raw t
     where t."ProcessAssetTypeDescription" is not null
     group by all
+), cte3_output as materialized (
+    -- Write to `dest_dir`, file_name is fixed...
+    copy (
+        select * from cte2_with_columns_no_dups
+        order by process_name
+    ) to ($dest_dir || '/process_names.parquet') (format parquet, compression snappy)
 )
-select * from cte2_with_columns_no_dups;
 
 
--- Write to `dest_dir`, file_name is fixed...
-copy (
-    select * from process
-    order by process_name
-) to (getvariable('dest_dir') || '/process_names.parquet') (format parquet, compression snappy);
-
-select 'Wrote: ' || getvariable('dest_dir') || '/process_names.parquet' as result;
+select 'Wrote: ' || $dest_dir || '/process_names.parquet' as result;

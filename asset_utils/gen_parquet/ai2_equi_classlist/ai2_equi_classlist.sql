@@ -46,76 +46,71 @@ create or replace temporary macro get_table_name(name varchar) as (
 );
 
 
-create or replace temporary table asset_types_attributes as
-with cte1_raw as (
+with cte1_ata_raw as (
     select 
         base_macros.nulled(trim(columns(t.*))),
     from read_xlsx(
-            getvariable('ata_source_xlsx'), 
-            sheet='AssetTypesAttributes',
-            all_varchar=true) as t
-), cte2_filtered as (
+            $ata_source_xlsx, 
+            sheet = 'AssetTypesAttributes',
+            all_varchar = true) as t
+), cte2_ata_filtered as (
     select
         t.*
-    from cte1_raw t
+    from cte1_ata_raw t
     where t."Code" like 'EQPT%'
     and t."AssetTypeDeletionFlag" = '0'
     and t."AttributeNameDeletionFlag" = '0'
-) 
-select 
-    t."Code" as class_name,
-    t."Description" as class_description,
-    trim(replace(t."Description", 'EQUIPMENT:', '')) as class_description2,
-    t."AttributeSet" as attribute_set_name,
-    t."Attribute Name" as attribute_name,
-    t."Attribute Description" as attribute_description,
-    if(t."Data Type Name" is null and t."LookupTypeId" is not null, 'ENUM', t."Data Type Name") as data_type,
-    decode_data_type(data_type) as ddl_data_type,
-    t."Lookup Type Name" as enum_name,
-from cte2_filtered t;
-
-
-create or replace temporary table equi_attribute_sets as
-with cte1_raw as (
+), cte3_asset_types_attributes as (
+    select 
+        t."Code" as class_name,
+        t."Description" as class_description,
+        trim(replace(t."Description", 'EQUIPMENT:', '')) as class_description2,
+        t."AttributeSet" as attribute_set_name,
+        t."Attribute Name" as attribute_name,
+        t."Attribute Description" as attribute_description,
+        if(t."Data Type Name" is null and t."LookupTypeId" is not null, 'ENUM', t."Data Type Name") as data_type,
+        decode_data_type(data_type) as ddl_data_type,
+        t."Lookup Type Name" as enum_name,
+    from cte2_ata_filtered t
+), cte4_attrs_raw as (
     select 
         base_macros.nulled(trim(columns(t.*))),
     from read_xlsx(
-        getvariable('attr_sets_source_xlsx'), 
-        all_varchar=true, 
-        sheet='Sheet1') t
-)
-select 
-    t."Attribute Description" as class_name,
-    t."Attribute Set" as attribute_set_name,
-    t."Class Derivation" as class_derivation
-from cte1_raw t
-where t."Attribute Description" is not null;
-
-create or replace temporary view vw_ai2_equi_classes as
-with cte1_filtered_attr_sets as (
+        $attr_sets_source_xlsx, 
+        all_varchar = true, 
+        sheet = 'Sheet1') t
+), cte5_equi_attribute_sets_all as (
+    select 
+        t."Attribute Description" as class_name,
+        t."Attribute Set" as attribute_set_name,
+        t."Class Derivation" as class_derivation
+    from cte4_attrs_raw t
+    where t."Attribute Description" is not null
+), cte6_filtered_attr_sets as (
     select 
         t.* 
-    from equi_attribute_sets t
+    from cte5_equi_attribute_sets_all t
     where t.class_derivation in ('Equiclass', 'Equimixin') 
-) 
-select 
-    t1.*,
-    t.class_derivation as class_derivation,
-    case 
-        when t.class_derivation = 'Equiclass' then get_table_name(t1.class_description)
-        when t.class_derivation = 'Equimixin' then get_table_name(t1.attribute_set_name)
-        else null 
-    end as class_table_name,
-from cte1_filtered_attr_sets t
-join asset_types_attributes t1 
-    on t1.class_description = t.class_name
-    and t1.attribute_set_name = t.attribute_set_name;
+), cte7_ai2_equi_classes as (
+    select 
+        t1.*,
+        t.class_derivation as class_derivation,
+        case 
+            when t.class_derivation = 'Equiclass' then get_table_name(t1.class_description)
+            when t.class_derivation = 'Equimixin' then get_table_name(t1.attribute_set_name)
+            else null 
+        end as class_table_name,
+    from cte6_filtered_attr_sets t
+    join cte3_asset_types_attributes t1 
+        on t1.class_description = t.class_name
+        and t1.attribute_set_name = t.attribute_set_name
+), cte8_output as materialized (
+    -- Write to `dest_dir`, file_name is fixed...
+    copy (
+        select * from cte7_ai2_equi_classes
+        order by class_name, attribute_set_name, attribute_name
+    ) to ($dest_dir || '/ai2_equi_classlist.parquet') (format parquet, compression snappy)
+)
 
--- Write to `dest_dir`, file_name is fixed...
-copy (
-    select * from vw_ai2_equi_classes
-    order by class_name, attribute_set_name, attribute_name
-) to (getvariable('dest_dir') || '/ai2_equi_classlist.parquet') (format parquet, compression snappy);
-
-select 'Wrote: ' || getvariable('dest_dir') || '/ai2_equi_classlist.parquet' as result;
+select 'Wrote: ' || $dest_dir || '/ai2_equi_classlist.parquet' as result;
 
