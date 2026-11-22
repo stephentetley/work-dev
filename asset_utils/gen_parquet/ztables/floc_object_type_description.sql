@@ -20,24 +20,24 @@ from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 
 from base_macros.assert_databases_are_loaded(['base_macros']);
 
-create or replace temporary table table1 as
 with cte1_raw as (
     select 
         base_macros.nulled(trim(columns(t.*))),
     from read_xlsx(
-            getvariable('source_xlsx'), 
+            $source_xlsx, 
             all_varchar=true) as t
+), cte2_tidied as (
+    select
+        t."Object Type" as object_type,
+        t."Standard FLoc Description" as standard_floc_description,
+    from cte1_raw t
+), cte3_output as materialized (
+    -- Write to `dest_dir`, file_name is fixed...
+    copy (
+        select * from cte2_tidied
+        order by object_type
+    ) to ($dest_dir || '/floc_object_type_description.parquet') (format parquet, compression snappy)
 )
-select
-    t."Object Type" as object_type,
-    t."Standard FLoc Description" as standard_floc_description,
-from cte1_raw t;
 
--- Write to `dest_dir`, file_name is fixed...
-copy (
-    select * from table1
-    order by object_type
-) to (getvariable('dest_dir') || '/floc_object_type_description.parquet') (format parquet, compression snappy);
-
-select 'Wrote: ' || getvariable('dest_dir') || '/floc_object_type_description.parquet' as result;
+select 'Wrote: ' || $dest_dir || '/floc_object_type_description.parquet' as result;
 

@@ -22,26 +22,26 @@ from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 from base_macros.assert_databases_are_loaded(['base_macros']);
 
 
-create or replace temporary table table1 as
 with cte1_raw as (
     select 
         base_macros.nulled(trim(columns(t.*))),
     from read_xlsx(
-            getvariable('source_xlsx'), 
+            $source_xlsx, 
             all_varchar=true) as t
+), cte2_tidied as (
+    select
+        t."Structure indicator" AS structure_indicator,
+        t."Object Type" AS object_type,
+        t."Object Type_1" AS object_type_1,
+        t."Remarks" AS remarks,
+    from cte1_raw t
+), cte3_output as materialized (
+    -- Write to `dest_dir`, file_name is fixed...
+    copy (
+        select * from cte2_tidied
+        order by structure_indicator, object_type, object_type_1
+    ) to ($dest_dir || '/floc_object_type_hierarchy.parquet') (format parquet, compression snappy)
 )
-select
-    t."Structure indicator" AS structure_indicator,
-    t."Object Type" AS object_type,
-    t."Object Type_1" AS object_type_1,
-    t."Remarks" AS remarks,
-from cte1_raw t;
 
--- Write to `dest_dir`, file_name is fixed...
-copy (
-    select * from table1
-    order by structure_indicator, object_type, object_type_1
-) to (getvariable('dest_dir') || '/floc_object_type_hierarchy.parquet') (format parquet, compression snappy);
-
-select 'Wrote: ' || getvariable('dest_dir') || '/floc_object_type_hierarchy.parquet' as result;
+select 'Wrote: ' || $dest_dir || '/floc_object_type_hierarchy.parquet' as result;
 

@@ -21,24 +21,25 @@ from base_macros.assert_variables_are_distinct(getvariable('inputs'));
 from base_macros.assert_databases_are_loaded(['base_macros']);
 
 
-create or replace temporary table table1 as
 with cte1_raw as (
     select 
         base_macros.nulled(trim(columns(t.*))),
     from read_xlsx(
-            getvariable('source_xlsx'), 
+            $source_xlsx, 
             all_varchar=true) as t
+), cte2_tidied as (
+    select
+        t."Manufacturer" AS manufacturer,
+        t."Model Number" AS model,
+    from cte1_raw t
+), cte3_output as materialized (
+    -- Write to `dest_dir`, file_name is fixed...
+    copy (
+        select * from cte2_tidied
+        order by manufacturer, model
+    ) to ($dest_dir || '/manuf_model_number.parquet') (format parquet, compression snappy)
 )
-select
-    t."Manufacturer" AS manufacturer,
-    t."Model Number" AS model,
-from cte1_raw t;
 
--- Write to `dest_dir`, file_name is fixed...
-copy (
-    select * from table1
-    order by manufacturer, model
-) to (getvariable('dest_dir') || '/manuf_model_number.parquet') (format parquet, compression snappy);
 
 select 'Wrote: ' || getvariable('dest_dir') || '/manuf_model_number.parquet' as result;
 
